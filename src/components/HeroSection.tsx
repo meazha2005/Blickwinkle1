@@ -168,7 +168,7 @@ export default function HeroSection() {
       {/* ================================================================
           HERO
           ================================================================ */}
-      <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-white pt-20">
+      <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-white pt-16 sm:pt-20">
 
         {/* Background */}
         <div className="absolute inset-0 z-0 pointer-events-none">
@@ -192,7 +192,7 @@ export default function HeroSection() {
         {/* Half-circle revolving logos on the right edge (visible only on mobile & tablet at 30% opacity) */}
         <MobileTabletHeroAccent />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8 lg:pt-20 pb-32 sm:pb-28 lg:pb-20 -translate-y-2 sm:-translate-y-3 lg:translate-y-0">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
 
             {/* ── Left: Copy ──────────────────────────────────────────── */}

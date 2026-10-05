@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import Lenis from "lenis";
 import confetti from "canvas-confetti";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowDown,
+  ArrowUp,
   X,
   Send,
   Check,
+  Sparkles,
+  ChevronUp,
 } from "lucide-react";
 
 interface ServiceItem {
@@ -153,28 +157,44 @@ export default function ServicesPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [activeView, setActiveView] = useState<"showcase" | "footer">("showcase");
   const [modalOpen, setModalOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
 
+  const footerContainerRef = useRef<HTMLDivElement>(null);
   const total = SERVICES.length;
   const currentService = SERVICES[currentIndex];
 
+  // Preload all service images immediately upon mount for instantaneous slide decoding
+  useEffect(() => {
+    SERVICES.forEach((service) => {
+      const img = new window.Image();
+      img.src = service.image;
+    });
+  }, []);
+
   const goToNext = useCallback(() => {
     if (isTransitioning) return;
+    if (currentIndex >= total - 1) {
+      // Completed all slides: Proceed smoothly to Footer
+      setActiveView("footer");
+      return;
+    }
     setIsTransitioning(true);
     setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % total);
-    setTimeout(() => setIsTransitioning(false), 650);
-  }, [isTransitioning, total]);
+    setCurrentIndex((prev) => prev + 1);
+    setTimeout(() => setIsTransitioning(false), 380);
+  }, [currentIndex, isTransitioning, total]);
 
   const goToPrev = useCallback(() => {
     if (isTransitioning) return;
+    if (currentIndex <= 0) return;
     setIsTransitioning(true);
     setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + total) % total);
-    setTimeout(() => setIsTransitioning(false), 650);
-  }, [isTransitioning, total]);
+    setCurrentIndex((prev) => prev - 1);
+    setTimeout(() => setIsTransitioning(false), 380);
+  }, [currentIndex, isTransitioning]);
 
   const goToIndex = useCallback(
     (target: number) => {
@@ -182,40 +202,29 @@ export default function ServicesPage() {
       setIsTransitioning(true);
       setDirection(target > currentIndex ? 1 : -1);
       setCurrentIndex(target);
-      setTimeout(() => setIsTransitioning(false), 650);
+      if (activeView === "footer") {
+        setActiveView("showcase");
+      }
+      setTimeout(() => setIsTransitioning(false), 380);
     },
-    [currentIndex, isTransitioning]
+    [activeView, currentIndex, isTransitioning]
   );
 
+  const goToSlides = useCallback(
+    (index: number = total - 1) => {
+      setCurrentIndex(index);
+      setDirection(-1);
+      setActiveView("showcase");
+    },
+    [total]
+  );
+
+  // Wheel handling for Showcase mode
   useEffect(() => {
-    let lenis: Lenis | null = null;
-    let rafId: number = 0;
+    if (activeView !== "showcase") return;
 
-    try {
-      lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smoothWheel: true,
-      });
-
-      const raf = (time: number) => {
-        lenis?.raf(time);
-        rafId = requestAnimationFrame(raf);
-      };
-      rafId = requestAnimationFrame(raf);
-    } catch {
-      // Fallback
-    }
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      lenis?.destroy();
-    };
-  }, []);
-
-  useEffect(() => {
     let lastWheelTime = 0;
-    const cooldown = 700;
+    const cooldown = 380;
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -234,20 +243,25 @@ export default function ServicesPage() {
 
     window.addEventListener("wheel", handleWheel, { passive: false });
     return () => window.removeEventListener("wheel", handleWheel);
-  }, [goToNext, goToPrev]);
+  }, [activeView, goToNext, goToPrev]);
 
+  // Touch handling for Showcase mode (snappy, butter-smooth with 30px threshold)
   useEffect(() => {
+    if (activeView !== "showcase") return;
+
     let startY = 0;
     let startX = 0;
     let lastTouchTime = 0;
-    const cooldown = 600;
+    const cooldown = 380;
 
     const handleTouchStart = (e: TouchEvent) => {
+      if (modalOpen) return;
       startY = e.touches[0].clientY;
       startX = e.touches[0].clientX;
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
+      if (modalOpen) return;
       const now = Date.now();
       if (now - lastTouchTime < cooldown) return;
 
@@ -257,18 +271,18 @@ export default function ServicesPage() {
       const deltaX = endX - startX;
 
       if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        if (deltaY < -35) {
+        if (deltaY < -30) {
           lastTouchTime = now;
           goToNext();
-        } else if (deltaY > 35) {
+        } else if (deltaY > 30) {
           lastTouchTime = now;
           goToPrev();
         }
       } else {
-        if (deltaX < -35) {
+        if (deltaX < -30) {
           lastTouchTime = now;
           goToNext();
-        } else if (deltaX > 35) {
+        } else if (deltaX > 30) {
           lastTouchTime = now;
           goToPrev();
         }
@@ -281,22 +295,75 @@ export default function ServicesPage() {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [goToNext, goToPrev]);
+  }, [activeView, goToNext, goToPrev, modalOpen]);
 
+  // Footer scroll back-to-slides listener
+  useEffect(() => {
+    if (activeView !== "footer") return;
+    const el = footerContainerRef.current;
+    if (!el) return;
+
+    let startY = 0;
+    let lastWheelTime = 0;
+    const cooldown = 400;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const endY = e.changedTouches[0].clientY;
+      const deltaY = endY - startY;
+      if (el.scrollTop <= 5 && deltaY > 60) {
+        goToSlides(total - 1);
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      const now = Date.now();
+      if (now - lastWheelTime < cooldown) return;
+      if (el.scrollTop <= 5 && e.deltaY < -25) {
+        lastWheelTime = now;
+        goToSlides(total - 1);
+      }
+    };
+
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
+    el.addEventListener("wheel", handleWheel, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchend", handleTouchEnd);
+      el.removeEventListener("wheel", handleWheel);
+    };
+  }, [activeView, goToSlides, total]);
+
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (modalOpen) return;
-      if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") {
-        e.preventDefault();
-        goToNext();
-      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp") {
-        e.preventDefault();
-        goToPrev();
+      if (activeView === "showcase") {
+        if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") {
+          e.preventDefault();
+          goToNext();
+        } else if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp") {
+          e.preventDefault();
+          goToPrev();
+        }
+      } else if (activeView === "footer") {
+        if (
+          e.key === "Escape" ||
+          ((e.key === "ArrowUp" || e.key === "PageUp") &&
+            footerContainerRef.current &&
+            footerContainerRef.current.scrollTop <= 5)
+        ) {
+          goToSlides(total - 1);
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goToNext, goToPrev, modalOpen]);
+  }, [activeView, goToNext, goToPrev, goToSlides, modalOpen, total]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -314,168 +381,282 @@ export default function ServicesPage() {
     }, 2800);
   };
 
+  // Hardware-accelerated slide variants (Pure translateX, no scale calculation overhead)
   const slideVariants: Variants = {
     enter: (dir: number) => ({
       x: dir > 0 ? "-100%" : "100%",
       opacity: 0,
-      scale: 0.96,
     }),
     center: {
       x: "0%",
       opacity: 1,
-      scale: 1,
       transition: {
-        x: { type: "spring" as const, stiffness: 290, damping: 32 },
-        opacity: { duration: 0.4 },
-        scale: { duration: 0.45 },
+        x: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+        opacity: { duration: 0.28, ease: "easeOut" },
       },
     },
     exit: (dir: number) => ({
       x: dir > 0 ? "100%" : "-100%",
       opacity: 0,
-      scale: 0.96,
       transition: {
-        x: { type: "spring" as const, stiffness: 290, damping: 32 },
-        opacity: { duration: 0.35 },
-        scale: { duration: 0.4 },
+        x: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+        opacity: { duration: 0.25, ease: "easeIn" },
       },
     }),
   };
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50/40 text-slate-900 select-none flex flex-col justify-between">
+    <div className="relative w-full h-[100dvh] overflow-hidden bg-white text-slate-900 select-none">
       {/* ── Global Header ────────────────────────────────────────────── */}
       <Header />
 
-      {/* ── Ambient Background Lighting & Tech Grid ──────────────────── */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
-        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full bg-[#0071BC]/7 blur-3xl transform-gpu" />
-        <div className="absolute -bottom-32 -left-32 w-[600px] h-[600px] rounded-full bg-[#39B54A]/6 blur-3xl transform-gpu" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-blue-100/25 blur-3xl pointer-events-none" />
-
-        <div
-          className="absolute inset-0 opacity-[0.035]"
-          style={{
-            backgroundImage: "radial-gradient(#0071BC 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
-
-        <div className="absolute right-4 bottom-20 sm:bottom-24 text-[12rem] sm:text-[18rem] lg:text-[22rem] font-black text-slate-900/[0.025] leading-none select-none pointer-events-none font-mono">
-          {String(currentService.id).padStart(2, "0")}
-        </div>
-      </div>
-
-      {/* ── Main Interactive Showcase Stage (Framer Motion AnimatePresence) ─ */}
-      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-2 sm:pb-4 flex items-center justify-center overflow-hidden">
-        <AnimatePresence mode="wait" custom={direction}>
+      <AnimatePresence mode="wait">
+        {activeView === "showcase" ? (
+          /* ================================================================
+             VIEW 1: SERVICES SHOWCASE STAGE (PPT Directional Transition)
+             ================================================================ */
           <motion.div
-            key={currentService.id}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="w-full h-full max-h-[580px] sm:max-h-[640px] lg:max-h-[700px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-12 items-center"
+            key="showcase-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -30 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="relative w-full h-full flex flex-col justify-between overflow-hidden touch-none"
           >
-            {/* ── Left Column: Narrative, Title & Action ─────────────── */}
-            <div className="md:col-span-1 lg:col-span-6 flex flex-col justify-center gap-2 sm:gap-3 lg:gap-4 order-2 md:order-1 max-w-xl">
-              
-              {/* Service Title & Tagline */}
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight text-slate-900 leading-[1.08]">
-                  {currentService.title}
-                </h1>
+            {/* ── Ambient Radial Lighting (Zero blur GPU load) ──────────── */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+              <div className="absolute -top-32 -right-32 w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(0,113,188,0.11)_0%,transparent_70%)] pointer-events-none" />
+              <div className="absolute -bottom-32 -left-32 w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(57,181,74,0.09)_0%,transparent_70%)] pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle,rgba(219,234,254,0.35)_0%,transparent_70%)] pointer-events-none" />
+
+              <div
+                className="absolute inset-0 opacity-[0.035]"
+                style={{
+                  backgroundImage: "radial-gradient(#0071BC 1px, transparent 1px)",
+                  backgroundSize: "28px 28px",
+                }}
+              />
+
+              <div className="absolute right-4 bottom-20 sm:bottom-24 text-[12rem] sm:text-[18rem] lg:text-[22rem] font-black text-slate-900/[0.025] leading-none select-none pointer-events-none font-mono">
+                {String(currentService.id).padStart(2, "0")}
+              </div>
+            </div>
+
+            {/* ── Main Interactive Showcase Stage (mode="popLayout" for zero lag) ─ */}
+            <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-2 sm:pb-4 flex items-center justify-center overflow-hidden">
+              <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+                <motion.div
+                  key={currentService.id}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="w-full h-full max-h-[580px] sm:max-h-[640px] lg:max-h-[700px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-12 items-center transform-gpu will-change-transform"
+                >
+                  {/* ── Left Column: Narrative, Title & Action ─────────────── */}
+                  <div className="md:col-span-1 lg:col-span-6 flex flex-col justify-center gap-2 sm:gap-3 lg:gap-4 order-2 md:order-1 max-w-xl">
+                    {/* Category Pill */}
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-[#0071BC]/10 text-[#0071BC] border border-[#0071BC]/20">
+                        {currentService.category}
+                      </span>
+                      <span className="text-[11px] sm:text-xs font-semibold text-slate-400">
+                        Service {currentService.id} of {total}
+                      </span>
+                    </div>
+
+                    {/* Service Title */}
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight text-slate-900 leading-[1.08]">
+                        {currentService.title}
+                      </h1>
+                    </div>
+
+                    {/* Impact Description (Full 5-6 lines, clean and balanced across all screen sizes) */}
+                    <p className="text-slate-600 text-xs sm:text-sm lg:text-base leading-relaxed font-medium">
+                      {currentService.description}
+                    </p>
+
+                    {/* Action Bar */}
+                    <div className="flex items-center gap-3 sm:gap-4 pt-1 sm:pt-2">
+                      <button
+                        onClick={() => setModalOpen(true)}
+                        className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#0071BC] to-[#39B54A] text-white text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-200 btn-shimmer active:scale-95"
+                      >
+                        Get Started
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ── Right Column: Heroic Framed Showcase Card ──────────── */}
+                  <div className="md:col-span-1 lg:col-span-6 relative order-1 md:order-2 flex justify-center items-center">
+                    <div className="relative w-full aspect-[16/9] sm:aspect-[16/10] max-w-sm sm:max-w-md lg:max-w-none rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 border border-slate-200/80 shadow-2xl shadow-blue-900/10">
+                      <Image
+                        src={currentService.image}
+                        alt={currentService.title}
+                        fill
+                        priority
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent pointer-events-none" />
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </main>
+
+            {/* ── Persistent Bottom Control HUD ─────────────────────────────── */}
+            <footer className="relative z-20 pb-4 sm:pb-6 px-4 sm:px-6 max-w-7xl mx-auto w-full flex flex-col gap-2.5 sm:gap-3">
+              {/* Continuous Progress Line */}
+              <div className="w-full h-1 bg-slate-200/80 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-[#0071BC] to-[#39B54A]"
+                  animate={{ width: `${((currentIndex + 1) / total) * 100}%` }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                />
               </div>
 
-              {/* Impact Description (Full 5-6 lines, clean and balanced across all screen sizes) */}
-              <p className="text-slate-600 text-xs sm:text-sm lg:text-base leading-relaxed font-medium">
-                {currentService.description}
-              </p>
-
-              {/* Action Bar */}
-              <div className="flex items-center gap-3 sm:gap-4 pt-1 sm:pt-2">
+              {/* HUD Controls Bar */}
+              <div className="flex items-center justify-between gap-4">
+                {/* Left Arrow Button */}
                 <button
-                  onClick={() => setModalOpen(true)}
-                  className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#0071BC] to-[#39B54A] text-white text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-200 btn-shimmer active:scale-95"
+                  onClick={goToPrev}
+                  disabled={currentIndex === 0}
+                  aria-label="Previous Service"
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-full bg-white border border-slate-200 shadow-sm text-slate-700 text-xs sm:text-sm font-bold transition-all duration-200 group active:scale-95 ${
+                    currentIndex === 0
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:border-[#0071BC] hover:text-[#0071BC]"
+                  }`}
                 >
-                  Get Started
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:-translate-x-1" />
+                  <span className="hidden sm:inline">Previous</span>
+                </button>
+
+                {/* Interactive Slide Dots / Thumbnails (All 11) */}
+                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-2 max-w-[220px] sm:max-w-md scrollbar-none">
+                  {SERVICES.map((s, idx) => {
+                    const isActive = idx === currentIndex;
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => goToIndex(idx)}
+                        aria-label={`Go to ${s.title}`}
+                        className={`transition-all duration-300 rounded-full flex-shrink-0 ${
+                          isActive
+                            ? "w-6 sm:w-8 h-2 sm:h-2.5 bg-gradient-to-r from-[#0071BC] to-[#39B54A] shadow-md shadow-blue-500/25"
+                            : "w-2 sm:w-2.5 h-2 sm:h-2.5 bg-slate-300 hover:bg-slate-400"
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Right Arrow / Footer Advance Button */}
+                <button
+                  onClick={goToNext}
+                  aria-label={currentIndex === total - 1 ? "Go to Footer" : "Next Service"}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-full text-white shadow-sm hover:shadow-md text-xs sm:text-sm font-bold transition-all duration-200 group active:scale-95 ${
+                    currentIndex === total - 1
+                      ? "bg-gradient-to-r from-[#0071BC] to-[#39B54A]"
+                      : "bg-gradient-to-r from-[#0071BC] to-[#005f9e] hover:from-[#0062a3]"
+                  }`}
+                >
+                  <span className="hidden sm:inline">
+                    {currentIndex === total - 1 ? "Complete & Footer" : "Next"}
+                  </span>
+                  {currentIndex === total - 1 ? (
+                    <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-y-1" />
+                  ) : (
+                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" />
+                  )}
                 </button>
               </div>
-            </div>
+            </footer>
+          </motion.div>
+        ) : (
+          /* ================================================================
+             VIEW 2: SERVICES FOOTER VIEW (Revealed after all 11 slides complete)
+             ================================================================ */
+          <motion.div
+            key="footer-view"
+            ref={footerContainerRef}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="relative w-full h-[100dvh] overflow-y-auto overscroll-contain bg-slate-950 text-slate-400 scroll-smooth"
+          >
+            {/* ── Top Return Action Header ───────────────────────────────── */}
+            <div className="sticky top-16 sm:top-20 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 lg:px-8 py-3">
+              <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+                <button
+                  onClick={() => goToSlides(total - 1)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 border border-slate-700/80 hover:border-[#0071BC] text-white text-xs sm:text-sm font-bold transition-all group active:scale-95 shadow-sm"
+                >
+                  <ChevronUp className="w-4 h-4 text-[#39B54A] transition-transform group-hover:-translate-y-0.5" />
+                  <span>Back to Services Slides</span>
+                </button>
 
-            {/* ── Right Column: Heroic Framed Showcase Card ──────────── */}
-            <div className="md:col-span-1 lg:col-span-6 relative order-1 md:order-2 flex justify-center items-center">
-              <div className="relative w-full aspect-[16/9] sm:aspect-[16/10] max-w-sm sm:max-w-md lg:max-w-none rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900 border border-slate-200/80 shadow-2xl shadow-blue-900/10 group">
-                <Image
-                  src={currentService.image}
-                  alt={currentService.title}
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent pointer-events-none" />
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+                  <span className="w-2 h-2 rounded-full bg-[#39B54A] animate-pulse" />
+                  <span className="hidden sm:inline">All 11 Services Explored</span>
+                  <span className="sm:hidden">11/11 Explored</span>
+                </div>
               </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
-      </main>
 
-      {/* ── Persistent Bottom Control HUD ─────────────────────────────── */}
-      <footer className="relative z-20 pb-4 sm:pb-6 px-4 sm:px-6 max-w-7xl mx-auto w-full flex flex-col gap-2.5 sm:gap-3">
-        {/* Continuous Progress Line */}
-        <div className="w-full h-1 bg-slate-200/80 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-[#0071BC] to-[#39B54A]"
-            animate={{ width: `${((currentIndex + 1) / total) * 100}%` }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          />
-        </div>
+            {/* ── Pre-Footer High-Impact Consultation Banner ───────────── */}
+            <section className="relative px-4 sm:px-6 lg:px-8 pt-12 pb-16 max-w-7xl mx-auto text-center flex flex-col items-center">
+              <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full bg-[#0071BC]/10 blur-3xl pointer-events-none" />
 
-        {/* HUD Controls Bar */}
-        <div className="flex items-center justify-between gap-4">
-          {/* Left Arrow Button */}
-          <button
-            onClick={goToPrev}
-            aria-label="Previous Service"
-            className="flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-full bg-white border border-slate-200 shadow-sm hover:border-[#0071BC] hover:text-[#0071BC] text-slate-700 text-xs sm:text-sm font-bold transition-all duration-200 group active:scale-95"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:-translate-x-1" />
-            <span className="hidden sm:inline">Previous</span>
-          </button>
+              <span className="relative z-10 px-3.5 py-1 rounded-full text-xs font-bold bg-[#0071BC]/20 text-blue-400 border border-[#0071BC]/30 mb-4 inline-flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#39B54A]" />
+                Ready to Accelerate Growth?
+              </span>
 
-          {/* Interactive Slide Dots / Thumbnails (All 11) */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-2 max-w-[240px] sm:max-w-md scrollbar-none">
-            {SERVICES.map((s, idx) => {
-              const isActive = idx === currentIndex;
-              return (
+              <h2 className="relative z-10 text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight max-w-2xl leading-tight">
+                Turn Your Vision Into High-Performing Digital Reality
+              </h2>
+
+              <p className="relative z-10 text-slate-400 text-sm sm:text-base max-w-xl mt-4 mb-8 leading-relaxed">
+                From strategic digital marketing and brand systems to custom software and autonomous AI workflows — we build, launch, and grow your complete digital presence.
+              </p>
+
+              <div className="relative z-10 flex flex-wrap items-center justify-center gap-4">
                 <button
-                  key={s.id}
-                  onClick={() => goToIndex(idx)}
-                  aria-label={`Go to ${s.title}`}
-                  className={`transition-all duration-300 rounded-full flex-shrink-0 ${
-                    isActive
-                      ? "w-6 sm:w-8 h-2 sm:h-2.5 bg-gradient-to-r from-[#0071BC] to-[#39B54A] shadow-md shadow-blue-500/25"
-                      : "w-2 sm:w-2.5 h-2 sm:h-2.5 bg-slate-300 hover:bg-slate-400"
-                  }`}
-                />
-              );
-            })}
-          </div>
+                  onClick={() => setModalOpen(true)}
+                  className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#0071BC] to-[#39B54A] text-white font-bold text-sm shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-200 btn-shimmer active:scale-95"
+                >
+                  Book a Free Strategy Consultation
+                </button>
+                <button
+                  onClick={() => goToSlides(0)}
+                  className="px-6 py-3.5 rounded-full bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white font-bold text-sm transition-all active:scale-95"
+                >
+                  Review All Services
+                </button>
+              </div>
+            </section>
 
-          {/* Right Arrow Button */}
-          <button
-            onClick={goToNext}
-            aria-label="Next Service"
-            className="flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-full bg-gradient-to-r from-[#0071BC] to-[#005f9e] text-white shadow-sm hover:shadow-md hover:from-[#0062a3] text-xs sm:text-sm font-bold transition-all duration-200 group active:scale-95"
-          >
-            <span className="hidden sm:inline">Next</span>
-            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1" />
-          </button>
-        </div>
-      </footer>
+            {/* ── Official Company Footer ──────────────────────────────── */}
+            <Footer />
+
+            {/* ── Floating "Back to Top / Slides" Pill ─────────────────── */}
+            <button
+              onClick={() => goToSlides(total - 1)}
+              aria-label="Back to Services Slides"
+              className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-[#0071BC] to-[#39B54A] text-white text-xs font-bold shadow-2xl shadow-blue-500/40 hover:-translate-y-1 transition-all active:scale-95"
+            >
+              <ArrowUp className="w-4 h-4" />
+              <span>Back to Slides</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Consultation Modal for Active Service ─────────────────────── */}
       <AnimatePresence>

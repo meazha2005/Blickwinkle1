@@ -32,10 +32,15 @@ export default function MobileTabletHeroAccent() {
     let animId = 0;
     const count = LOGOS.length; // 9 logos
 
+    let cachedW = 290;
+    let cachedH = 570;
+
     const updateDims = () => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       if (rect.width > 0 && rect.height > 0) {
+        cachedW = rect.width;
+        cachedH = rect.height;
         setDimensions({ w: rect.width, h: rect.height });
       }
     };
@@ -51,9 +56,8 @@ export default function MobileTabletHeroAccent() {
 
     const loop = (time: number) => {
       if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
+      const w = cachedW;
+      const h = cachedH;
 
       // Center of the circle is anchored on the right border, vertically centered
       const centerX = w;
@@ -125,7 +129,7 @@ export default function MobileTabletHeroAccent() {
   return (
     <div
       ref={containerRef}
-      className="absolute top-1/2 -translate-y-1/2 right-0 w-[290px] sm:w-[390px] md:w-[430px] h-[570px] sm:h-[660px] pointer-events-none opacity-30 select-none block lg:hidden z-10 overflow-hidden"
+      className="absolute top-1/2 -translate-y-1/2 right-0 w-[290px] sm:w-[390px] md:w-[430px] h-[570px] sm:h-[660px] pointer-events-none opacity-30 select-none block lg:hidden z-10 overflow-hidden transform-gpu"
       aria-hidden="true"
     >
       <div className="relative w-full h-full">

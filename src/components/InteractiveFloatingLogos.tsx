@@ -13,9 +13,9 @@ const LOGO_SRCS = [
 ];
 
 // Responsive repetitions:
-// Phone (< 768px): 2 repetitions (18 logos)
-// Tab (768px - 1023px): 3 repetitions (27 logos)
-// Laptop & Desktop (>= 1024px): 5 repetitions (45 logos)
+// Phone (< 768px): 2 repetitions (14 logos)
+// Tab (768px - 1023px): 3 repetitions (21 logos)
+// Laptop & Desktop (>= 1024px): 5 repetitions (35 logos)
 function getRepetitions(w: number): number {
   if (w < 768) return 2;
   if (w < 1024) return 3;
@@ -45,16 +45,15 @@ export default function InteractiveFloatingLogos() {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
     let animId = 0;
     let width = 0;
     let height = 0;
 
-    // Preload all 9 images
+    // Preload all logo images
     const images: HTMLImageElement[] = [];
-
     LOGO_SRCS.forEach((src) => {
       const img = new Image();
       img.src = src;
@@ -81,13 +80,12 @@ export default function InteractiveFloatingLogos() {
       const halfSize = LOGO_SIZE / 2;
 
       // Distribute slots proportionally across zones so logos never pile or clump:
-      // ~44% left corner, ~44% right corner, remainder in lower center
       const leftCount = Math.max(1, Math.round(total * 0.44));
       const rightCount = Math.max(1, Math.round(total * 0.44));
       const centerCount = Math.max(1, total - leftCount - rightCount);
       const slots: number[] = [];
 
-      // Left zone slots: 16px to w * 0.35
+      // Left zone slots
       const leftStart = 16 + halfSize;
       const leftEnd = Math.max(leftStart + 40, w * 0.35 - halfSize);
       const leftStep = (leftEnd - leftStart) / Math.max(1, leftCount - 1);
@@ -96,7 +94,7 @@ export default function InteractiveFloatingLogos() {
         slots.push(Math.max(halfSize + 4, Math.min(w * 0.36, x)));
       }
 
-      // Right zone slots: w * 0.65 to w - 16px
+      // Right zone slots
       const rightStart = Math.min(w - halfSize - 40, w * 0.65 + halfSize);
       const rightEnd = w - 16 - halfSize;
       const rightStep = (rightEnd - rightStart) / Math.max(1, rightCount - 1);
@@ -105,7 +103,7 @@ export default function InteractiveFloatingLogos() {
         slots.push(Math.max(w * 0.64, Math.min(w - halfSize - 4, x)));
       }
 
-      // Center slots: w * 0.40 to w * 0.60
+      // Center slots
       const centerStart = w * 0.40;
       const centerEnd = w * 0.60;
       const centerStep = (centerEnd - centerStart) / Math.max(1, centerCount - 1);
@@ -114,26 +112,30 @@ export default function InteractiveFloatingLogos() {
         slots.push(x);
       }
 
+      // Elevated floor on mobile so logos are 100% visible and not hidden under mobile navigation / gesture bar
+      const isMobile = w < 768;
+      const bottomMargin = isMobile ? 56 : 24;
+      const rowGap = isMobile ? 20 : 16;
+
       for (let i = 0; i < total; i++) {
-        // Interleave logo images so identical logos aren't placed side by side
         const imgIndex = (i * 2 + Math.floor(i / LOGO_SRCS.length)) % LOGO_SRCS.length;
         const targetX = slots[i] || w / 2;
 
-        // Staggered cascade drop from above
-        const startY = -40 - (i * 14) - Math.random() * 80;
+        // Snappy initial cascade: start right above the top boundary so they drop immediately
+        const startY = -25 - (i * 8) - Math.random() * 35;
 
-        // Two clean, natural resting floor tiers at the bottom (Row 0: bottom, Row 1: slightly staggered)
+        // Clean resting floor tiers lifted comfortably above screen bottom
         const row = i % 2;
-        const floorY = h - halfSize - 8 - row * 16;
+        const floorY = h - halfSize - bottomMargin - row * rowGap;
 
         particles.push({
           imgIndex,
           x: targetX,
           y: startY,
-          vx: (Math.random() - 0.5) * 0.8,
-          vy: 2.0 + Math.random() * 2.0,
-          rotation: (Math.random() - 0.5) * 0.6,
-          vr: (Math.random() - 0.5) * 0.03,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: 3.5 + Math.random() * 2.5, // Brisk initial velocity (snappy drop)
+          rotation: (Math.random() - 0.5) * 0.4,
+          vr: (Math.random() - 0.5) * 0.02,
           floorY,
           size: LOGO_SIZE,
           isResting: false,
@@ -144,7 +146,8 @@ export default function InteractiveFloatingLogos() {
     function resize() {
       if (!canvas || !container) return;
       const rect = container.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Cap DPR at 1.5 for ultra-smooth 60fps/120fps on mobile without GPU fill-rate strain
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
       width = rect.width;
       height = rect.height;
@@ -159,6 +162,9 @@ export default function InteractiveFloatingLogos() {
 
       const halfSize = LOGO_SIZE / 2;
       const expectedTotal = LOGO_SRCS.length * getRepetitions(width);
+      const isMobile = width < 768;
+      const bottomMargin = isMobile ? 56 : 24;
+      const rowGap = isMobile ? 20 : 16;
 
       if (particles.length === 0 || particles.length !== expectedTotal) {
         initParticles(width, height);
@@ -166,7 +172,7 @@ export default function InteractiveFloatingLogos() {
         particles.forEach((p, idx) => {
           if (p.x > width - halfSize) p.x = width - halfSize - 10;
           const row = idx % 2;
-          p.floorY = height - halfSize - 8 - row * 16;
+          p.floorY = height - halfSize - bottomMargin - row * rowGap;
           if (p.isResting) {
             p.y = p.floorY;
           }
@@ -178,13 +184,18 @@ export default function InteractiveFloatingLogos() {
     window.addEventListener("resize", resize);
 
     const heroElement = container.parentElement || container;
+    let cachedRect = heroElement.getBoundingClientRect();
 
-    // Pointer tracking (mouse + touch) scoped strictly to hero element
+    const updateRect = () => {
+      cachedRect = heroElement.getBoundingClientRect();
+    };
+    window.addEventListener("scroll", updateRect, { passive: true });
+    window.addEventListener("resize", updateRect, { passive: true });
+
+    // Pointer tracking (mouse + touch) using cached bounds to avoid layout thrashing
     const handlePointerMove = (e: PointerEvent) => {
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const newX = e.clientX - rect.left;
-      const newY = e.clientY - rect.top;
+      const newX = e.clientX - cachedRect.left;
+      const newY = e.clientY - cachedRect.top;
 
       if (mouse.isActive) {
         mouse.vx = (newX - mouse.prevX) * 0.5;
@@ -210,10 +221,8 @@ export default function InteractiveFloatingLogos() {
     };
 
     const handlePointerDown = (e: PointerEvent) => {
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const clickX = e.clientX - cachedRect.left;
+      const clickY = e.clientY - cachedRect.top;
 
       particles.forEach((p) => {
         const dx = p.x - clickX;
@@ -236,12 +245,12 @@ export default function InteractiveFloatingLogos() {
     heroElement.addEventListener("pointerleave", handlePointerLeave, { passive: true });
     heroElement.addEventListener("pointerdown", handlePointerDown, { passive: true });
 
-    // Physics constants
-    const GRAVITY = 0.25;
-    const AIR_RESISTANCE = 0.975;
-    const BOUNCE_RESTITUTION = 0.40;
+    // Snappy, realistic physics constants: lively drop, smooth settling
+    const GRAVITY = 0.52; // Snappy natural gravity (up from sluggish 0.25)
+    const AIR_RESISTANCE = 0.985;
+    const BOUNCE_RESTITUTION = 0.35;
     const INTERACTION_RADIUS = 90;
-    const MAX_VELOCITY = 7.0;
+    const MAX_VELOCITY = 8.0;
 
     // Animation Loop
     function loop() {
@@ -272,7 +281,7 @@ export default function InteractiveFloatingLogos() {
             const clampedMouseVy = Math.max(-4, Math.min(4, mouse.vy * 0.2));
 
             p.vx += nx * push + clampedMouseVx;
-            p.vy += ny * (push * 0.5) + clampedMouseVy - factor * 3.5; // Natural upward lift
+            p.vy += ny * (push * 0.5) + clampedMouseVy - factor * 3.5;
             p.vr += (nx * 0.03 + (Math.random() - 0.5) * 0.02) * factor;
 
             p.vx = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, p.vx));
@@ -298,9 +307,9 @@ export default function InteractiveFloatingLogos() {
             p.y = p.floorY;
 
             // Decisive settling: if bounce velocity is small, settle immediately
-            if (Math.abs(p.vy) < 1.1) {
+            if (Math.abs(p.vy) < 1.4) {
               p.vy = 0;
-              p.vx *= 0.6;
+              p.vx *= 0.5;
               if (Math.abs(p.vx) < 0.1) {
                 p.vx = 0;
                 p.vr = 0;
@@ -308,7 +317,7 @@ export default function InteractiveFloatingLogos() {
               }
             } else {
               p.vy = -p.vy * BOUNCE_RESTITUTION;
-              p.vx *= 0.75;
+              p.vx *= 0.7;
               p.vr *= 0.6;
             }
           }
@@ -332,21 +341,17 @@ export default function InteractiveFloatingLogos() {
           p.y = p.floorY;
           p.vy = 0;
           p.vx = 0;
-          p.rotation *= 0.92;
+          p.rotation *= 0.90;
         }
 
-        // Render logo
+        // Render logo without expensive shadowBlur for 60fps/120fps mobile butter smoothness
         const img = images[p.imgIndex];
         if (img && img.complete && img.naturalWidth > 0) {
           ctx.save();
           ctx.translate(p.x, p.y);
-          ctx.rotate(p.rotation);
-
-          // Crisp floating drop shadow
-          ctx.shadowColor = "rgba(0, 0, 0, 0.12)";
-          ctx.shadowBlur = 6;
-          ctx.shadowOffsetY = 3;
-
+          if (Math.abs(p.rotation) > 0.005) {
+            ctx.rotate(p.rotation);
+          }
           ctx.drawImage(img, -halfSize, -halfSize, p.size, p.size);
           ctx.restore();
         }
@@ -360,6 +365,8 @@ export default function InteractiveFloatingLogos() {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", updateRect);
+      window.removeEventListener("resize", updateRect);
       heroElement.removeEventListener("pointermove", handlePointerMove);
       heroElement.removeEventListener("pointerleave", handlePointerLeave);
       heroElement.removeEventListener("pointerdown", handlePointerDown);
@@ -369,7 +376,7 @@ export default function InteractiveFloatingLogos() {
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 pointer-events-none z-20 overflow-hidden"
+      className="absolute inset-0 pointer-events-none z-20 overflow-hidden transform-gpu"
       aria-hidden="true"
     >
       <canvas ref={canvasRef} className="w-full h-full block" />

@@ -9,8 +9,6 @@ import Header from "@/components/Header";
 import {
   ArrowLeft,
   ArrowRight,
-  Sparkles,
-  TrendingUp,
   X,
   Send,
   Check,

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import InteractiveFloatingLogos from "@/components/InteractiveFloatingLogos";
 import MobileTabletHeroAccent from "@/components/MobileTabletHeroAccent";
@@ -159,10 +160,6 @@ const CLIENT_LOGOS = [
 
 // ─── Main Export ──────────────────────────────────────────────────────────
 export default function HeroSection() {
-
-  const scrollTo = (id: string) =>
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
-
   return (
     <>
       {/* ================================================================
@@ -242,15 +239,21 @@ export default function HeroSection() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.75, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-wrap gap-3"
+                className="flex flex-wrap items-center gap-3"
               >
-                <button
-                  onClick={() => scrollTo("#services")}
+                <Link
+                  href="/services"
                   className="group flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#0071BC] to-[#39B54A] text-white font-bold text-sm shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 btn-shimmer"
                 >
                   Explore Services
                   <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </button>
+                </Link>
+                <Link
+                  href="/courses"
+                  className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-white border border-slate-200 text-slate-800 font-bold text-sm shadow-sm hover:border-[#0071BC] hover:text-[#0071BC] hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  Explore Courses
+                </Link>
               </motion.div>
 
               {/* Social proof */}

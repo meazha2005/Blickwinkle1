@@ -10,9 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 const navLinks = [
   { label: "Home",     href: "/" },
   { label: "Services", href: "/services" },
-  { label: "About",    href: "#about" },
-  { label: "Courses",  href: "#courses" },
-  { label: "Contact",  href: "#contact" },
+  { label: "About",    href: "/about" },
+  { label: "Courses",  href: "/courses" },
+  { label: "Contact",  href: "/contact" },
 ];
 
 export default function Header() {
@@ -29,14 +29,6 @@ export default function Header() {
 
   const handleNav = (href: string) => {
     setMobileOpen(false);
-    if (href === "/services") {
-      if (pathname !== "/services") router.push("/services");
-      return;
-    }
-    if (href === "/") {
-      if (pathname !== "/") router.push("/");
-      return;
-    }
     if (href.startsWith("#")) {
       if (pathname !== "/") {
         router.push("/" + href);
@@ -44,6 +36,10 @@ export default function Header() {
         const el = document.querySelector(href);
         el?.scrollIntoView({ behavior: "smooth" });
       }
+      return;
+    }
+    if (pathname !== href) {
+      router.push(href);
     }
   };
 
@@ -101,7 +97,7 @@ export default function Header() {
             {/* CTA + Hamburger */}
             <div className="flex items-center gap-3">
               <button
-                onClick={() => handleNav("#contact")}
+                onClick={() => handleNav("/contact")}
                 className="hidden md:flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#0071BC] to-[#39B54A] text-white text-sm font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-200 btn-shimmer"
               >
                 Get Started
@@ -162,7 +158,7 @@ export default function Header() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                onClick={() => handleNav("#contact")}
+                onClick={() => handleNav("/contact")}
                 className="mt-6 w-full py-3 rounded-full bg-gradient-to-r from-[#0071BC] to-[#39B54A] text-white font-bold text-sm shadow-lg"
               >
                 Get Started

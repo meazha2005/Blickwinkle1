@@ -14,18 +14,39 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-const footerLinks = {
-  Services: [
-    "Digital Marketing",
-    "Social Media Management",
-    "Web Development",
-    "Software Solutions",
-    "Automation",
-    "EduTech Courses",
-  ],
-  Company: ["About Us", "Our Team", "Careers", "Blog", "Case Studies"],
-  Support: ["Contact Us", "FAQ", "Privacy Policy", "Terms of Service"],
-};
+const footerSections = [
+  {
+    title: "Services",
+    links: [
+      { label: "Strategic Marketing", href: "/services" },
+      { label: "Social Media & Branding", href: "/services" },
+      { label: "Web & Software Engineering", href: "/services" },
+      { label: "Custom AI & Automation", href: "/services" },
+      { label: "All Services (11 Services)", href: "/services" },
+    ],
+  },
+  {
+    title: "Courses",
+    links: [
+      { label: "Digital Marketing", href: "/courses" },
+      { label: "IELTS Masterclass", href: "/courses" },
+      { label: "PTE Coaching", href: "/courses" },
+      { label: "Campus to Corporate", href: "/courses" },
+      { label: "Corporate Communication", href: "/courses" },
+      { label: "Medical Coding (CPC®)", href: "/courses" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About Us", href: "/about" },
+      { label: "Our Story & Vision", href: "/about" },
+      { label: "College Partnerships", href: "/about" },
+      { label: "Contact & Inquiries", href: "/contact" },
+      { label: "Course Brochures", href: "/courses" },
+    ],
+  },
+];
 
 const socials = [
   { icon: AtSign,       label: "Twitter / X"  },
@@ -92,18 +113,18 @@ export default function Footer() {
           </div>
 
           {/* Link Columns */}
-          {Object.entries(footerLinks).map(([section, links]) => (
-            <div key={section} className="flex flex-col gap-4">
-              <h4 className="text-white font-bold text-sm tracking-wide">{section}</h4>
+          {footerSections.map((sec) => (
+            <div key={sec.title} className="flex flex-col gap-4">
+              <h4 className="text-white font-bold text-sm tracking-wide">{sec.title}</h4>
               <ul className="flex flex-col gap-2.5">
-                {links.map((link) => (
-                  <li key={link}>
+                {sec.links.map((link) => (
+                  <li key={link.label}>
                     <Link
-                      href="#"
+                      href={link.href}
                       className="text-sm text-slate-400 hover:text-[#39B54A] transition-colors duration-200 flex items-center gap-1 group"
                     >
                       <ArrowRight className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-[#39B54A]" />
-                      {link}
+                      {link.label}
                     </Link>
                   </li>
                 ))}

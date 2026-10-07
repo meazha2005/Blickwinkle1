@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -66,6 +67,15 @@ const PARTNERS = [
 ];
 
 export default function AboutPage() {
+  // Preload all partner logos immediately so scrolling never freezes decoding images
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    PARTNERS.forEach((p) => {
+      const img = new window.Image();
+      img.src = p.logo;
+    });
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-white text-slate-900">
       <Header />
@@ -73,9 +83,19 @@ export default function AboutPage() {
       <main className="flex-1 pt-24 sm:pt-28 pb-16">
         {/* ── 1. Hero Section ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden pt-8 pb-16 lg:pb-24">
-          {/* Subtle Ambient Glows */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-[#0071BC]/5 blur-3xl pointer-events-none transform-gpu" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-[#39B54A]/5 blur-3xl pointer-events-none transform-gpu" />
+          {/* Subtle Ambient Radial Glows (Zero CSS blur overhead) */}
+          <div
+            className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none transform-gpu"
+            style={{
+              background: "radial-gradient(circle, rgba(0,113,188,0.08) 0%, rgba(0,113,188,0) 70%)",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full pointer-events-none transform-gpu"
+            style={{
+              background: "radial-gradient(circle, rgba(57,181,74,0.06) 0%, rgba(57,181,74,0) 70%)",
+            }}
+          />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
@@ -279,9 +299,24 @@ export default function AboutPage() {
         </section>
 
         {/* ── 4. Institutional Partners & Enterprise Clients ─────────── */}
-        <section id="partners" className="py-16 lg:py-24 bg-slate-900 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-1/4 w-[400px] h-[400px] rounded-full bg-[#0071BC]/15 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full bg-[#39B54A]/10 blur-3xl pointer-events-none" />
+        <section
+          id="partners"
+          className="py-16 lg:py-24 bg-slate-900 text-white relative overflow-hidden transform-gpu"
+          style={{ contentVisibility: "auto", containIntrinsicSize: "0 600px" }}
+        >
+          {/* Hardware-accelerated radial glows with zero CSS filter blur */}
+          <div
+            className="absolute top-0 right-1/4 w-[400px] h-[400px] rounded-full pointer-events-none transform-gpu"
+            style={{
+              background: "radial-gradient(circle, rgba(0,113,188,0.18) 0%, rgba(0,113,188,0) 70%)",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full pointer-events-none transform-gpu"
+            style={{
+              background: "radial-gradient(circle, rgba(57,181,74,0.14) 0%, rgba(57,181,74,0) 70%)",
+            }}
+          />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto mb-14">
@@ -300,15 +335,16 @@ export default function AboutPage() {
               {PARTNERS.map((partner) => (
                 <div
                   key={partner.name}
-                  className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 backdrop-blur-sm flex flex-col items-center justify-center text-center gap-3 group hover:bg-slate-800 hover:border-[#0071BC]/50 transition-all duration-200"
+                  className="p-5 rounded-2xl bg-slate-800 border border-slate-700/80 flex flex-col items-center justify-center text-center gap-3 group hover:border-[#0071BC]/70 transition-colors duration-200"
                 >
-                  <div className="relative w-14 h-14 rounded-full bg-white p-1 overflow-hidden shadow-md flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+                  <div className="relative w-14 h-14 rounded-full bg-white p-1 overflow-hidden shadow-md flex items-center justify-center shrink-0">
                     <Image
                       src={partner.logo}
                       alt={partner.name}
                       fill
                       sizes="56px"
                       className="object-contain p-1"
+                      decoding="async"
                     />
                   </div>
                   <div>
@@ -320,7 +356,7 @@ export default function AboutPage() {
             </div>
 
             {/* University MoU callout */}
-            <div className="mt-14 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-900/40 to-slate-800/80 border border-blue-500/20 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="mt-14 p-6 sm:p-8 rounded-3xl bg-slate-800 border border-blue-500/30 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#0071BC] text-white flex items-center justify-center shrink-0">
                   <Building2 className="w-6 h-6" />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -250,6 +250,46 @@ export default function CoursesPage() {
     }, 2800);
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const scrollToTargetCourse = () => {
+      const hash = window.location.hash.replace("#", "").toLowerCase().trim();
+      const params = new URLSearchParams(window.location.search);
+      const courseParam = (params.get("course") || params.get("id") || hash).toLowerCase().trim();
+
+      if (!courseParam) return;
+
+      const target = COURSES.find(
+        (c) =>
+          c.id.toLowerCase() === courseParam ||
+          c.title.toLowerCase().replace(/[^a-z0-9]/g, "").includes(courseParam.replace(/[^a-z0-9]/g, ""))
+      );
+
+      if (target) {
+        setActiveCategory("all");
+        setTimeout(() => {
+          const el = document.getElementById(target.id);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+            el.classList.add("ring-4", "ring-[#0071BC]/40", "shadow-2xl");
+            setTimeout(() => {
+              el.classList.remove("ring-4", "ring-[#0071BC]/40", "shadow-2xl");
+            }, 2500);
+          }
+        }, 200);
+      }
+    };
+
+    scrollToTargetCourse();
+    window.addEventListener("hashchange", scrollToTargetCourse);
+    window.addEventListener("popstate", scrollToTargetCourse);
+    return () => {
+      window.removeEventListener("hashchange", scrollToTargetCourse);
+      window.removeEventListener("popstate", scrollToTargetCourse);
+    };
+  }, []);
+
   const filteredCourses =
     activeCategory === "all"
       ? COURSES
@@ -296,32 +336,6 @@ export default function CoursesPage() {
                 to AAPC Medical Coding CPC® and corporate placement readiness—download official brochures and launch your global career.
               </motion.p>
 
-              {/* Category Filter Pills */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3"
-              >
-                {[
-                  { id: "all", label: "All Programs (6)" },
-                  { id: "study-abroad", label: "Study Abroad (IELTS / PTE)" },
-                  { id: "corporate", label: "Corporate & Campus Placement" },
-                  { id: "healthcare-tech", label: "Medical Coding & Marketing" },
-                ].map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={`px-4 sm:px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${
-                      activeCategory === cat.id
-                        ? "bg-[#0071BC] text-white shadow-md shadow-blue-500/25 scale-105"
-                        : "bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </motion.div>
             </div>
           </div>
         </section>
@@ -329,17 +343,19 @@ export default function CoursesPage() {
         {/* ── 2. Course Cards Grid ────────────────────────────────────── */}
         <section className="py-6 sm:py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+           
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {filteredCourses.map((course) => {
                 const Icon = course.icon;
                 return (
                   <motion.div
                     key={course.id}
+                    id={course.id}
                     layout
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4 }}
-                    className="flex flex-col justify-between rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-2xl hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 p-6 sm:p-7 relative group"
+                    className="scroll-mt-28 sm:scroll-mt-32 flex flex-col justify-between rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-2xl hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 p-6 sm:p-7 relative group"
                   >
                     <div>
                       {/* Top Badges */}
@@ -595,26 +611,11 @@ export default function CoursesPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span
-                      className="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
-                      style={{
-                        backgroundColor: `${selectedCourse.color}15`,
-                        color: selectedCourse.color,
-                      }}
-                    >
-                      Course Admission
-                    </span>
-                    <span className="text-xs font-semibold text-slate-500">
-                      {selectedCourse.categoryLabel}
-                    </span>
-                  </div>
 
                   <h3 className="text-2xl font-black text-slate-900 tracking-tight">
                     Enroll in {selectedCourse.title}
                   </h3>
                   <p className="text-slate-500 text-xs sm:text-sm mt-1 mb-5 font-medium">
-                    Reserve your seat or request 1-on-1 counseling with our course mentor.
                   </p>
 
                   <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">

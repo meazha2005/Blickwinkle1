@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -14,6 +15,8 @@ import {
   Star,
   CheckCircle2,
   ChevronRight,
+  Mail,
+  Send,
 } from "lucide-react";
 
 // ─── Service Card ─────────────────────────────────────────────────────────
@@ -25,85 +28,181 @@ interface ServiceProps {
   iconColor: string;
   bg: string;
   delay: number;
+  href: string;
 }
 
-function ServiceCard({ image, icon: Icon, title, iconColor, bg, delay }: ServiceProps) {
+function ServiceCard({ image, icon: Icon, title, iconColor, bg, delay, href }: ServiceProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{ delay: Math.min(delay, 0.2), duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="service-card group rounded-3xl border border-slate-100 bg-white p-5 flex flex-col gap-4 cursor-pointer hover:shadow-xl transition-all duration-300 transform-gpu"
+      className="h-full"
     >
-      {/* Service Illustration */}
-      <div className="relative w-full aspect-[3/2] rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
-        <Image
-          src={image}
-          alt={title}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent pointer-events-none" />
-        {/* Floating Icon badge */}
-        <div className={`absolute bottom-2.5 left-2.5 w-9 h-9 rounded-xl ${bg} backdrop-blur-md bg-white/95 shadow-md border border-white/80 flex items-center justify-center`}>
-          <Icon className="w-4 h-4" style={{ color: iconColor }} />
+      <Link
+        href={href}
+        className="service-card group rounded-3xl border border-slate-100 bg-white p-5 flex flex-col gap-4 cursor-pointer hover:shadow-xl hover:border-blue-200 hover:-translate-y-1 transition-all duration-300 transform-gpu block h-full"
+      >
+        {/* Service Illustration */}
+        <div className="relative w-full aspect-[3/2] rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
+          <Image
+            src={image}
+            alt={title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent pointer-events-none" />
+          {/* Floating Icon badge */}
+          <div className={`absolute bottom-2.5 left-2.5 w-9 h-9 rounded-xl ${bg} backdrop-blur-md bg-white/95 shadow-md border border-white/80 flex items-center justify-center`}>
+            <Icon className="w-4 h-4" style={{ color: iconColor }} />
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-1.5 flex-1">
-        <h3 className="text-lg font-extrabold text-slate-900 group-hover:text-[#0071BC] transition-colors">{title}</h3>
-      </div>
+        <div className="flex flex-col gap-1.5 flex-1">
+          <h3 className="text-lg font-extrabold text-slate-900 group-hover:text-[#0071BC] transition-colors">{title}</h3>
+        </div>
 
-      <div className="flex items-center gap-1 text-[#0071BC] text-sm font-bold group-hover:gap-2 transition-all pt-1">
-        Learn more <ChevronRight className="w-4 h-4" />
-      </div>
+        <div className="flex items-center gap-1 text-[#0071BC] text-sm font-bold group-hover:gap-2 transition-all pt-1">
+          Learn more <ChevronRight className="w-4 h-4" />
+        </div>
+      </Link>
     </motion.div>
   );
 }
 
-// ─── CTA Section ──────────────────────────────────────────────────────────
+// ─── Newsletter & Email Subscription Section ──────────────────────────────
 function CtaSection() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setStatus("error");
+      setErrorMessage("Please enter your email address.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      setStatus("error");
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
+
+    setStatus("loading");
+    setErrorMessage("");
+
+    setTimeout(() => {
+      setStatus("success");
+    }, 500);
+  };
+
   return (
-    <section id="contact" className="py-20 bg-gradient-to-br from-[#0071BC] to-[#005f9e] overflow-hidden relative">
+    <section id="subscribe" className="py-20 bg-gradient-to-br from-[#0071BC] to-[#005f9e] overflow-hidden relative">
       <div className="absolute top-0 right-0 w-[500px] h-full bg-[#39B54A]/15 rounded-l-full blur-3xl pointer-events-none transform-gpu" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center max-w-3xl mx-auto">
+          
           <motion.h2
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
             className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight"
           >
-            Ready to Transform Your Digital Presence?
+            Subscribe to Get Our
+            <span className="text-[#86efac] block sm:inline sm:ml-2">Latest Emails & Updates</span>
           </motion.h2>
+
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-blue-100 mt-4 text-base sm:text-lg"
+            className="text-blue-100 mt-4 text-base sm:text-lg max-w-2xl mx-auto"
           >
-            Let&apos;s build something extraordinary together. Get a free strategy consultation today.
+            Join our mailing list to receive weekly digital marketing insights, tech updates, custom software strategies, and exclusive course announcements right in your inbox.
           </motion.p>
+
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mt-8"
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mt-8"
           >
-            <input
-              type="email"
-              placeholder="Enter your email address"
-              className="flex-1 max-w-sm px-5 py-3.5 rounded-full bg-white/15 border border-white/30 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
-            />
-            <button className="px-7 py-3.5 rounded-full bg-white text-[#0071BC] font-bold text-sm shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 btn-shimmer">
-              Get Free Consultation
-            </button>
+            {status === "success" ? (
+              <div className="max-w-md mx-auto p-5 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-xl flex items-center gap-4 text-left">
+                <div className="w-12 h-12 rounded-full bg-[#39B54A]/30 border border-[#39B54A]/50 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-[#86efac]" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-base text-white">You&apos;re Subscribed! 🎉</h4>
+                  <p className="text-xs text-blue-100 mt-0.5">
+                    Thank you for joining. Watch your inbox for our latest updates and insights.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStatus("idle");
+                      setEmail("");
+                    }}
+                    className="mt-2 text-xs text-white underline underline-offset-2 hover:text-[#86efac] transition-colors"
+                  >
+                    Subscribe another email
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="max-w-lg mx-auto">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch">
+                  <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-blue-200">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (status === "error") setStatus("idle");
+                      }}
+                      placeholder="Enter your email to subscribe..."
+                      className="w-full pl-11 pr-4 py-3.5 rounded-full bg-white/15 border border-white/30 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white/60 focus:bg-white/20 transition-all text-sm"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="px-7 py-3.5 rounded-full bg-white text-[#0071BC] hover:bg-slate-50 font-bold text-sm shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 btn-shimmer shrink-0 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                  >
+                    {status === "loading" ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-[#0071BC] border-t-transparent rounded-full animate-spin" />
+                        <span>Subscribing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Subscribe</span>
+                        <Send className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {status === "error" && (
+                  <p className="text-amber-200 text-xs mt-2.5 text-center font-medium">
+                    {errorMessage}
+                  </p>
+                )}
+              </form>
+            )}
           </motion.div>
+
         </div>
       </div>
     </section>
@@ -120,6 +219,7 @@ const SERVICES: ServiceProps[] = [
     iconColor: "#0071BC",
     bg: "bg-blue-50",
     delay: 0,
+    href: "/services?service=digital-marketing",
   },
   {
     image: "/service_social.jpg",
@@ -129,6 +229,7 @@ const SERVICES: ServiceProps[] = [
     iconColor: "#39B54A",
     bg: "bg-green-50",
     delay: 0.1,
+    href: "/services?service=social-media-management",
   },
   {
     image: "/service_software.jpg",
@@ -138,6 +239,7 @@ const SERVICES: ServiceProps[] = [
     iconColor: "#0071BC",
     bg: "bg-blue-50",
     delay: 0.2,
+    href: "/services?service=website",
   },
   {
     image: "/service_courses.jpg",
@@ -147,6 +249,7 @@ const SERVICES: ServiceProps[] = [
     iconColor: "#39B54A",
     bg: "bg-green-50",
     delay: 0.3,
+    href: "/courses",
   },
 ];
 

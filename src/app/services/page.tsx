@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import Lenis from "lenis";
 import confetti from "canvas-confetti";
@@ -149,8 +150,78 @@ const SERVICES: ServiceItem[] = [
   },
 ];
 
-export default function ServicesPage() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+function findServiceIndex(query: string): number {
+  if (!query) return -1;
+  const clean = query.toLowerCase().trim().replace(/^#/, "");
+
+  const num = parseInt(clean, 10);
+  if (!isNaN(num)) {
+    const byId = SERVICES.findIndex((s) => s.id === num);
+    if (byId !== -1) return byId;
+  }
+
+  const aliasMap: Record<string, number> = {
+    "marketing": 0,
+    "strategic-marketing": 0,
+    "strategicmarketing": 0,
+    "branding": 1,
+    "brand": 1,
+    "campaign": 2,
+    "campaign-strategy": 2,
+    "campaignstrategy": 2,
+    "digital-marketing": 3,
+    "digitalmarketing": 3,
+    "social-media": 4,
+    "social-media-management": 4,
+    "socialmediamanagement": 4,
+    "social": 4,
+    "content": 5,
+    "content-creation": 5,
+    "website": 6,
+    "web-development": 6,
+    "webdevelopment": 6,
+    "web-software": 6,
+    "web-and-software": 6,
+    "web": 6,
+    "software": 7,
+    "custom-software": 7,
+    "software-engineering": 7,
+    "custom-social-media-automation": 8,
+    "social-automation": 8,
+    "custom-ai-automation": 9,
+    "ai-automation": 9,
+    "ai": 9,
+    "crm": 10,
+  };
+
+  if (aliasMap[clean] !== undefined) {
+    return aliasMap[clean];
+  }
+
+  const normClean = clean.replace(/[^a-z0-9]/g, "");
+  const foundIdx = SERVICES.findIndex((s) => {
+    const normTitle = s.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+    return normTitle === normClean || normTitle.includes(normClean) || normClean.includes(normTitle);
+  });
+
+  return foundIdx;
+}
+
+function ServicesContent() {
+  const searchParams = useSearchParams();
+
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get("service") || params.get("id") || window.location.hash.replace("#", "");
+      if (query) {
+        const idx = findServiceIndex(query);
+        if (idx >= 0 && idx < SERVICES.length) return idx;
+      }
+    }
+    return 0;
+  });
+
   const [direction, setDirection] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -160,7 +231,7 @@ export default function ServicesPage() {
   const currentService = SERVICES[currentIndex];
 
   const isTransitioningRef = useRef(false);
-  const currentIndexRef = useRef(0);
+  const currentIndexRef = useRef(currentIndex);
 
   // Preload all service images immediately so transitions never drop frames decoding images
   useEffect(() => {
@@ -213,6 +284,40 @@ export default function ServicesPage() {
     },
     []
   );
+
+  // Respond to search param (?service=...) or hash changes
+  useEffect(() => {
+    const serviceParam = searchParams?.get("service") || searchParams?.get("id");
+    const hash = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
+    const targetQuery = serviceParam || hash;
+    if (targetQuery) {
+      const idx = findServiceIndex(targetQuery);
+      if (idx !== -1 && idx !== currentIndexRef.current) {
+        goToIndex(idx);
+      }
+    }
+  }, [searchParams, goToIndex]);
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      if (typeof window === "undefined") return;
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get("service") || params.get("id") || window.location.hash.replace("#", "");
+      if (query) {
+        const idx = findServiceIndex(query);
+        if (idx !== -1 && idx !== currentIndexRef.current) {
+          goToIndex(idx);
+        }
+      }
+    };
+
+    window.addEventListener("hashchange", handleUrlChange);
+    window.addEventListener("popstate", handleUrlChange);
+    return () => {
+      window.removeEventListener("hashchange", handleUrlChange);
+      window.removeEventListener("popstate", handleUrlChange);
+    };
+  }, [goToIndex]);
 
   // Lenis smooth scroll provider for production-grade butter-smooth scrolling
   useEffect(() => {
@@ -703,5 +808,19 @@ export default function ServicesPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function ServicesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-[100dvh] w-full bg-slate-50 flex items-center justify-center text-slate-400 font-semibold">
+          Loading services...
+        </div>
+      }
+    >
+      <ServicesContent />
+    </Suspense>
   );
 }

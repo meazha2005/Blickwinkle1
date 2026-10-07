@@ -61,12 +61,12 @@ const CONTACT_METHODS = [
   },
   {
     icon: MapPin,
-    title: "Headquarters",
+    title: "Headquarters & Academy",
     value: "Chennai, Tamil Nadu",
-    href: "https://maps.google.com/?q=Chennai,+Tamil+Nadu,+India",
-    detail: "Serving clients & students globally",
+    href: "#map",
+    detail: "Blickwinkle Learning Academy Campus",
     color: "#39B54A",
-    action: "View Map",
+    action: "View on Map",
   },
 ];
 
@@ -448,7 +448,55 @@ export default function ContactPage() {
           </div>
         </section>
 
-        {/* ── 4. Frequently Asked Questions (FAQ) ─────────────────────── */}
+        {/* ── 4. Interactive Campus Map ──────────────────────────────────── */}
+        <section id="map" className="py-10 sm:py-14 scroll-mt-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="rounded-3xl bg-white border border-slate-200/90 shadow-md p-6 sm:p-8 lg:p-10">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8">
+                <div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[#0071BC] text-xs font-bold uppercase tracking-wider mb-2.5">
+                    <MapPin className="w-3.5 h-3.5 text-[#39B54A]" />
+                    <span>Campus &amp; Studio Location</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
+                    Visit Blickwinkle Learning Academy
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-2 font-medium max-w-2xl">
+                    Located in Chennai. Drop by for in-person course counseling, student admissions, project discovery sessions, or corporate training partnerships.
+                  </p>
+                </div>
+
+                <a
+                  href="https://maps.google.com/?q=Blickwinkle+Learning+Academy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-slate-900 hover:bg-[#0071BC] text-white font-bold text-xs sm:text-sm transition-all duration-200 shadow-sm shrink-0 w-fit"
+                >
+                  <MapPin className="w-4 h-4 text-[#39B54A]" />
+                  <span>Get Directions</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+
+              {/* Responsive Map Container */}
+              <div className="relative w-full h-[360px] sm:h-[440px] lg:h-[480px] rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200 shadow-inner bg-slate-100">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3886.8907102313024!2d80.17660181142236!3d13.04262798722627!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a5261c9d0eec93d%3A0x2c8d26fc9544ca1e!2sBlickwinkle%20Learning%20Academy!5e0!3m2!1sen!2sin!4v1791353413580!5m2!1sen!2sin"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  title="Blickwinkle Learning Academy Google Maps Location"
+                  className="w-full h-full border-0"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 5. Frequently Asked Questions (FAQ) ─────────────────────── */}
         <section className="py-14 sm:py-16">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">

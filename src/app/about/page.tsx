@@ -9,7 +9,6 @@ import Footer from "@/components/Footer";
 import {
   Sparkles,
   Target,
-  Building2,
   GraduationCap,
   Laptop,
   ArrowRight,
@@ -17,13 +16,6 @@ import {
   Compass,
   ChevronDown,
 } from "lucide-react";
-
-const STATS = [
-  { value: "80+", label: "Global Clients", sub: "Enterprises, SMEs & Startups" },
-  { value: "5,000+", label: "Students Trained", sub: "Across Colleges & Bootcamps" },
-  { value: "15+", label: "University Partners", sub: "Premier Academic MoUs" },
-  { value: "99.8%", label: "Satisfaction Rate", sub: "Excellence in Delivery" },
-];
 
 const VALUES = [
   {

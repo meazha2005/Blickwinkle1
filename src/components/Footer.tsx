@@ -18,22 +18,22 @@ const footerSections = [
   {
     title: "Services",
     links: [
-      { label: "Strategic Marketing", href: "/services" },
-      { label: "Social Media & Branding", href: "/services" },
-      { label: "Web & Software Engineering", href: "/services" },
-      { label: "Custom AI & Automation", href: "/services" },
+      { label: "Strategic Marketing", href: "/services?service=marketing" },
+      { label: "Social Media & Branding", href: "/services?service=social-media-management" },
+      { label: "Web & Software Engineering", href: "/services?service=website" },
+      { label: "Custom AI & Automation", href: "/services?service=custom-ai-automation" },
       { label: "All Services (11 Services)", href: "/services" },
     ],
   },
   {
     title: "Courses",
     links: [
-      { label: "Digital Marketing", href: "/courses" },
-      { label: "IELTS Masterclass", href: "/courses" },
-      { label: "PTE Coaching", href: "/courses" },
-      { label: "Campus to Corporate", href: "/courses" },
-      { label: "Corporate Communication", href: "/courses" },
-      { label: "Medical Coding (CPC®)", href: "/courses" },
+      { label: "Digital Marketing", href: "/courses#digital-marketing" },
+      { label: "IELTS Masterclass", href: "/courses#ielts" },
+      { label: "PTE Coaching", href: "/courses#pte" },
+      { label: "Campus to Corporate", href: "/courses#campus-to-corporate" },
+      { label: "Corporate Communication", href: "/courses#corporate-communication" },
+      { label: "Medical Coding (CPC®)", href: "/courses#medical-coding" },
     ],
   },
   {

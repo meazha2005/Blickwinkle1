@@ -102,8 +102,25 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          inquiryType: formData.inquiryType,
+          preferredContact: formData.preferredContact,
+          message: formData.message,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to submit contact message:", err);
+    }
+
     setSubmitted(true);
     confetti({
       particleCount: 100,

@@ -226,8 +226,25 @@ export default function CoursesPage() {
     setModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch("/api/course-enrollment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          courseName: formData.courseName,
+          background: formData.background,
+          mode: formData.mode,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to submit course enrollment:", err);
+    }
+
     setFormSubmitted(true);
     confetti({
       particleCount: 100,

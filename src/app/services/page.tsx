@@ -488,8 +488,24 @@ function ServicesContent() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goToNext, goToPrev, modalOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await fetch("/api/service-enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          serviceName: currentService.title,
+          message: formData.message,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to submit service inquiry:", err);
+    }
+
     setFormSubmitted(true);
     confetti({
       particleCount: 90,
@@ -507,7 +523,7 @@ function ServicesContent() {
   // Hardware-accelerated presentation slide variants
   const slideVariants: Variants = {
     enter: (dir: number) => ({
-      x: dir > 0 ? "-100%" : "100%",
+      x: dir > 0 ? "100%" : "-100%",
       opacity: 0,
     }),
     center: {
@@ -519,7 +535,7 @@ function ServicesContent() {
       },
     },
     exit: (dir: number) => ({
-      x: dir > 0 ? "100%" : "-100%",
+      x: dir > 0 ? "-100%" : "100%",
       opacity: 0,
       transition: {
         x: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },

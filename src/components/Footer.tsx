@@ -8,10 +8,6 @@ import {
   MapPin,
   ArrowRight,
   Heart,
-  Globe,
-  Rss,
-  AtSign,
-  MessageSquare,
 } from "lucide-react";
 
 const footerSections = [
@@ -33,7 +29,7 @@ const footerSections = [
       { label: "PTE Coaching", href: "/courses#pte" },
       { label: "Campus to Corporate", href: "/courses#campus-to-corporate" },
       { label: "Corporate Communication", href: "/courses#corporate-communication" },
-      { label: "Medical Coding (CPC®)", href: "/courses#medical-coding" },
+      { label: "Medical Coding", href: "/courses#medical-coding" },
     ],
   },
   {
@@ -49,10 +45,26 @@ const footerSections = [
 ];
 
 const socials = [
-  { icon: AtSign,       label: "Twitter / X"  },
-  { icon: Globe,        label: "LinkedIn"      },
-  { icon: MessageSquare,label: "Instagram"     },
-  { icon: Rss,          label: "YouTube"       },
+  {
+    name: "WhatsApp",
+    src: "/floatings/whatsapp.png",
+    href: "https://wa.me/919791615499?text=Hello%20Blickwinkle%20Team%2C%20I%20would%20like%20to%20inquire%20about%20your%20services%20and%20courses.",
+  },
+  {
+    name: "Instagram",
+    src: "/floatings/insta.png",
+    href: "https://instagram.com/blickwinkle",
+  },
+  {
+    name: "Facebook",
+    src: "/floatings/facebook.png",
+    href: "https://facebook.com/blickwinkle",
+  },
+  {
+    name: "LinkedIn",
+    src: "/floatings/linkedin.png",
+    href: "https://linkedin.com/company/blickwinkle",
+  },
 ];
 
 export default function Footer() {
@@ -73,7 +85,7 @@ export default function Footer() {
                   BLICKWINKLE
                 </span>
                 <span className="text-[9px] tracking-widest text-slate-500 font-semibold uppercase">
-                  Digital Innovation
+                  Together We Grow
                 </span>
               </div>
             </Link>
@@ -84,29 +96,47 @@ export default function Footer() {
 
             {/* Contact Info */}
             <div className="flex flex-col gap-2.5">
-              {[
-                { icon: Mail,   text: "hello@blickwinkle.com" },
-                { icon: Phone,  text: "+91 98765 43210"       },
-                { icon: MapPin, text: "Chennai, India"        },
-              ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-2.5 text-sm text-slate-400 hover:text-white transition-colors cursor-default">
-                  <Icon className="w-4 h-4 text-[#0071BC] shrink-0" />
-                  {text}
-                </div>
-              ))}
+              <a
+                href="mailto:training@blickwinkle.com"
+                className="flex items-center gap-2.5 text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                <Mail className="w-4 h-4 text-[#0071BC] shrink-0" />
+                <span>training@blickwinkle.com</span>
+              </a>
+              <a
+                href="tel:+919791615499"
+                className="flex items-center gap-2.5 text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                <Phone className="w-4 h-4 text-[#0071BC] shrink-0" />
+                <span>+91 97916 15499</span>
+              </a>
+              <div className="flex items-center gap-2.5 text-sm text-slate-400 cursor-default">
+                <MapPin className="w-4 h-4 text-[#0071BC] shrink-0" />
+                <span>Chennai, India</span>
+              </div>
             </div>
 
             {/* Social Icons */}
-            <div className="flex gap-3 mt-1">
-              {socials.map(({ icon: Icon, label }) => (
+            <div className="flex items-center gap-3 mt-1">
+              {socials.map((social) => (
                 <Link
-                  key={label}
-                  href="#"
-                  aria-label={label}
-                  title={label}
-                  className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-gradient-to-br hover:from-[#0071BC] hover:to-[#39B54A] flex items-center justify-center text-slate-400 hover:text-white transition-all duration-200 hover:scale-110"
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.name}
+                  title={social.name}
+                  className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/90 flex items-center justify-center p-2 transition-all duration-200 hover:scale-110 shadow-sm group"
                 >
-                  <Icon className="w-4 h-4" />
+                  <div className="relative w-5 h-5 flex items-center justify-center">
+                    <Image
+                      src={social.src}
+                      alt={social.name}
+                      fill
+                      sizes="20px"
+                      className="object-contain transition-transform duration-200 group-hover:scale-110"
+                    />
+                  </div>
                 </Link>
               ))}
             </div>

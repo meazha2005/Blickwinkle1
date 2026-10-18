@@ -114,7 +114,7 @@ function CtaSection() {
   };
 
   return (
-    <section id="subscribe" className="py-20 bg-gradient-to-br from-[#0071BC] to-[#005f9e] overflow-hidden relative">
+    <section id="subscribe" className="py-12 sm:py-14 bg-gradient-to-br from-[#0071BC] to-[#005f9e] overflow-hidden relative">
       <div className="absolute top-0 right-0 w-[500px] h-full bg-[#39B54A]/15 rounded-l-full blur-3xl pointer-events-none transform-gpu" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center max-w-3xl mx-auto">
@@ -135,7 +135,7 @@ function CtaSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-blue-100 mt-4 text-base sm:text-lg max-w-2xl mx-auto"
+            className="text-blue-100 mt-3.5 sm:mt-4 text-base sm:text-lg max-w-2xl mx-auto"
           >
             Join our mailing list to receive weekly digital marketing insights, tech updates, custom software strategies, and exclusive course announcements right in your inbox.
           </motion.p>
@@ -145,7 +145,7 @@ function CtaSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="mt-8"
+            className="mt-6 sm:mt-7"
           >
             {status === "success" ? (
               <div className="max-w-md mx-auto p-5 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-xl flex items-center gap-4 text-left">

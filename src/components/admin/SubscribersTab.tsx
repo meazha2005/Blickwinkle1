@@ -14,8 +14,13 @@ import {
   Users,
 } from "lucide-react";
 import { Subscriber } from "@/types/admin";
+import { downloadCSV } from "@/lib/exportCsv";
 
-export default function SubscribersTab() {
+interface SubscribersTabProps {
+  onDataChange?: () => void;
+}
+
+export default function SubscribersTab({ onDataChange }: SubscribersTabProps = {}) {
   const [items, setItems] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -49,29 +54,8 @@ export default function SubscribersTab() {
   }, [search, statusFilter]);
 
   useEffect(() => {
-    let ignore = false;
-    async function loadData() {
-      try {
-        const params = new URLSearchParams();
-        if (search) params.set("search", search);
-        if (statusFilter !== "all") params.set("status", statusFilter);
-
-        const res = await fetch(`/api/admin/subscribers?${params.toString()}`);
-        const data = await res.json();
-        if (!ignore && data.success) {
-          setItems(data.items || []);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
-    void loadData();
-    return () => {
-      ignore = true;
-    };
-  }, [search, statusFilter]);
+    fetchItems();
+  }, [fetchItems]);
 
   const handleToggleStatus = async (id: number, currentStatus: string) => {
     const nextStatus = currentStatus === "active" ? "unsubscribed" : "active";
@@ -86,6 +70,7 @@ export default function SubscribersTab() {
         setFeedback(`Subscriber status changed to ${nextStatus}.`);
         setTimeout(() => setFeedback(null), 3000);
         fetchItems();
+        onDataChange?.();
       }
     } catch (err) {
       console.error(err);
@@ -103,6 +88,7 @@ export default function SubscribersTab() {
         setFeedback("Subscriber removed.");
         setTimeout(() => setFeedback(null), 3000);
         fetchItems();
+        onDataChange?.();
       }
     } catch (err) {
       console.error(err);
@@ -150,20 +136,17 @@ export default function SubscribersTab() {
     const headers = ["ID", "Email", "Status", "Welcome Sent", "Subscribed At"];
     const rows = items.map((i) => [
       i.id,
-      `"${(i.email || "").replace(/"/g, '""')}"`,
+      i.email || "",
       i.status,
       i.confirmation_sent ? "Yes" : "No",
       i.created_at,
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `blickwinkle_subscribers_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(
+      `blickwinkle_subscribers_${new Date().toISOString().slice(0, 10)}`,
+      headers,
+      rows
+    );
   };
 
   const activeCount = items.filter((i) => i.status === "active").length;

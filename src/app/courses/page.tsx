@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -9,8 +10,6 @@ import Footer from "@/components/Footer";
 import {
   Download,
   GraduationCap,
-  Calendar,
-  Clock,
   Sparkles,
   Award,
   CheckCircle2,
@@ -18,13 +17,19 @@ import {
   Send,
   X,
   Check,
-  Building2,
   FileText,
   ChevronDown,
   Globe,
   Briefcase,
   Activity,
 } from "lucide-react";
+
+const PARTNER_LOGOS = [
+  { name: "Loyola College", src: "/logos/loyola.png" },
+  { name: "Hindustan Institute", src: "/logos/hindustan.png" },
+  { name: "Kings College", src: "/logos/kings.png" },
+  { name: "New Prince Shri Bhavani", src: "/logos/new_prince.png" },
+];
 
 interface Course {
   id: string;
@@ -161,11 +166,11 @@ const COURSES: Course[] = [
   },
   {
     id: "medical-coding",
-    title: "Medical Coding (CPC®)",
-    badge: "AAPC Certification Track",
+    title: "Medical Coding",
+    badge: "Professional Training Track",
     category: "healthcare-tech",
     categoryLabel: "Healthcare IT & Coding",
-    tagline: "AAPC Certified Professional Coder (CPC®) Training with Placement Assistance",
+    tagline: "Comprehensive Medical Coding Training with Placement Assistance",
     description:
       "Launch a lucrative career in the thriving US Healthcare Revenue Cycle Management (RCM) industry. Master ICD-10-CM, CPT, and HCPCS Level II coding guidelines with comprehensive mock tests and guaranteed interview opportunities.",
     duration: "16 Weeks (160+ Hours)",
@@ -177,7 +182,7 @@ const COURSES: Course[] = [
       "HCPCS Level II Supplies/Medications Coding & Modifiers Application",
       "US Healthcare Revenue Cycle Management (RCM) & HIPAA Privacy Guidelines",
       "Over 1,000+ Real Surgical Operative Reports & Live Chart Audit Practice",
-      "Rigorous AAPC CPC® Mock Exams & Direct Placement Tie-Ups with Top RCM Firms",
+      "Rigorous Industry Mock Exams & Direct Placement Tie-Ups with Top RCM Firms",
     ],
     brochureFile: "Medical Coding Broucher.pdf",
     color: "#39B54A",
@@ -188,7 +193,7 @@ const COURSES: Course[] = [
 const FAQS = [
   {
     q: "Are Blickwinkle course certifications recognized by top employers?",
-    a: "Yes. Our courses are structured according to global industry benchmarks (such as the British Council / IDP for IELTS, Pearson for PTE, and AAPC for Medical Coding CPC®). Graduates receive Blickwinkle verified credentials alongside official examination prep certifications.",
+    a: "Yes. Our courses are structured according to global industry benchmarks (such as the British Council / IDP for IELTS, Pearson for PTE, and industry standards for Medical Coding). Graduates receive Blickwinkle verified credentials alongside official examination prep certifications.",
   },
   {
     q: "How do I download the official course brochure?",
@@ -350,7 +355,7 @@ export default function CoursesPage() {
                 className="mt-6 text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl font-medium mx-auto"
               >
                 Trained by seasoned industry practitioners. From British Council-aligned IELTS &amp; PTE masterclasses 
-                to AAPC Medical Coding CPC® and corporate placement readiness—download official brochures and launch your global career.
+                to Medical Coding and corporate placement readiness—download official brochures and launch your global career.
               </motion.p>
 
             </div>
@@ -375,21 +380,6 @@ export default function CoursesPage() {
                     className="scroll-mt-28 sm:scroll-mt-32 flex flex-col justify-between rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-2xl hover:border-blue-200 hover:-translate-y-1.5 transition-all duration-300 p-6 sm:p-7 relative group"
                   >
                     <div>
-                      {/* Top Badges */}
-                      <div className="flex items-center justify-between gap-2 mb-4">
-                        <span
-                          className="px-3 py-1 rounded-full text-[11px] font-extrabold tracking-wide uppercase"
-                          style={{
-                            backgroundColor: `${course.color}15`,
-                            color: course.color,
-                          }}
-                        >
-                          {course.badge}
-                        </span>
-                        <span className="text-xs font-semibold text-slate-400">
-                          {course.categoryLabel}
-                        </span>
-                      </div>
 
                       {/* Header Title with Icon */}
                       <div className="flex items-start gap-3.5 mb-3">
@@ -416,18 +406,6 @@ export default function CoursesPage() {
                       <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium mb-5">
                         {course.description}
                       </p>
-
-                      {/* Schedule & Duration Meta */}
-                      <div className="grid grid-cols-2 gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-100 mb-5 text-xs">
-                        <div className="flex items-center gap-1.5 text-slate-700">
-                          <Clock className="w-3.5 h-3.5 text-[#0071BC] shrink-0" />
-                          <span className="font-semibold truncate">{course.duration}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-slate-700">
-                          <Calendar className="w-3.5 h-3.5 text-[#39B54A] shrink-0" />
-                          <span className="font-semibold truncate">{course.mode}</span>
-                        </div>
-                      </div>
 
                       {/* Key Highlights Bullet points */}
                       <div className="mb-6">
@@ -494,8 +472,7 @@ export default function CoursesPage() {
                   Empowering 5,000+ Students Across South India&apos;s Premier Colleges
                 </h2>
                 <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-medium">
-                  Blickwinkle partners directly with college placement cells and departments of higher learning 
-                  (including Loyola College, Hindustan Institute, Kings College, and New Prince Shri Bhavani) 
+                  Blickwinkle partners directly with college placement cells and departments of higher learning
                   to deliver structured campus-to-corporate acceleration, medical coding, and IELTS preparatory bootcamps.
                 </p>
                 <div className="flex flex-wrap gap-4 pt-2">
@@ -518,26 +495,50 @@ export default function CoursesPage() {
                 </div>
               </div>
 
-              <div className="lg:col-span-5 grid grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-center flex flex-col items-center justify-center">
-                  <Award className="w-8 h-8 text-[#0071BC] mb-2" />
-                  <span className="text-2xl sm:text-3xl font-black text-white">100%</span>
-                  <span className="text-xs text-slate-400 mt-1 font-semibold">Placement Drives</span>
+              <div className="lg:col-span-5 grid grid-cols-[130px_1fr] sm:grid-cols-[155px_1fr] lg:grid-cols-[155px_1fr] gap-3 sm:gap-4 lg:gap-5 items-stretch w-full max-w-md sm:max-w-lg lg:max-w-none mx-auto lg:mx-0">
+                {/* ── Left Column: Infinite Top-to-Bottom Scrolling Logos (Reduced Width, Larger Logos) ── */}
+                <div className="relative h-[290px] sm:h-[320px] rounded-2xl bg-slate-800/80 border border-slate-700/80 p-2 sm:p-2.5 overflow-hidden flex flex-col justify-center shadow-lg shadow-black/20">
+                  
+                  {/* Gradient Fade Masks for smooth top & bottom edges */}
+                  <div className="absolute inset-x-0 top-0 h-10 sm:h-12 bg-gradient-to-b from-slate-800 via-slate-800/80 to-transparent z-10 pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 h-10 sm:h-12 bg-gradient-to-t from-slate-800 via-slate-800/80 to-transparent z-10 pointer-events-none" />
+
+                  {/* Infinite Top-to-Bottom Marquee Track */}
+                  <div className="mask-marquee-vertical overflow-hidden h-full">
+                    <div className="animate-marquee-down flex flex-col gap-2.5 sm:gap-3 will-change-transform py-2">
+                      {[...PARTNER_LOGOS, ...PARTNER_LOGOS, ...PARTNER_LOGOS, ...PARTNER_LOGOS].map((item, idx) => (
+                        <div
+                          key={`${item.name}-${idx}`}
+                          className="h-20 sm:h-24 w-full rounded-xl bg-white px-2 sm:px-2.5 py-1.5 flex items-center justify-center shadow-md border border-slate-200/60 transition-all duration-200 hover:scale-[1.03] group cursor-default"
+                          title={item.name}
+                        >
+                          <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                            <Image
+                              src={item.src}
+                              alt={item.name}
+                              fill
+                              sizes="(max-width: 640px) 130px, 160px"
+                              className="object-contain object-center scale-110 sm:scale-115 transition-transform duration-300 group-hover:scale-120"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-center flex flex-col items-center justify-center">
-                  <GraduationCap className="w-8 h-8 text-[#39B54A] mb-2" />
-                  <span className="text-2xl sm:text-3xl font-black text-white">5,000+</span>
-                  <span className="text-xs text-slate-400 mt-1 font-semibold">Students Upskilled</span>
-                </div>
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-center flex flex-col items-center justify-center">
-                  <Building2 className="w-8 h-8 text-[#39B54A] mb-2" />
-                  <span className="text-2xl sm:text-3xl font-black text-white">15+</span>
-                  <span className="text-xs text-slate-400 mt-1 font-semibold">College MoUs</span>
-                </div>
-                <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-center flex flex-col items-center justify-center">
-                  <FileText className="w-8 h-8 text-[#0071BC] mb-2" />
-                  <span className="text-2xl sm:text-3xl font-black text-white">6+</span>
-                  <span className="text-xs text-slate-400 mt-1 font-semibold">Core Disciplines</span>
+
+                {/* ── Right Column: Key Institutional Metrics ── */}
+                <div className="flex flex-col gap-3 sm:gap-4 h-[290px] sm:h-[320px]">
+                  <div className="flex-1 p-3.5 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-center flex flex-col items-center justify-center hover:border-[#39B54A]/40 transition-colors shadow-sm">
+                    <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8 text-[#39B54A] mb-1.5 sm:mb-2" />
+                    <span className="text-xl sm:text-3xl font-black text-white">5,000+</span>
+                    <span className="text-[11px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 font-semibold">Students Upskilled</span>
+                  </div>
+                  <div className="flex-1 p-3.5 sm:p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-center flex flex-col items-center justify-center hover:border-[#0071BC]/40 transition-colors shadow-sm">
+                    <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-[#0071BC] mb-1.5 sm:mb-2" />
+                    <span className="text-xl sm:text-3xl font-black text-white">6+</span>
+                    <span className="text-[11px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 font-semibold">Core Disciplines</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -679,7 +680,7 @@ export default function CoursesPage() {
                         <input
                           required
                           type="tel"
-                          placeholder="+91 98765 43210"
+                          placeholder="+91 97916 15499"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0071BC]/50 focus:border-[#0071BC]"

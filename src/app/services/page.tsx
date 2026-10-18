@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import Lenis from "lenis";
 import confetti from "canvas-confetti";
 import Header from "@/components/Header";
 import {
@@ -243,6 +242,18 @@ function ServicesContent() {
     });
   }, []);
 
+  const mousePosRef = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mousePosRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  const TRANSITION_LOCK_MS = 500;
+
   const goToNext = useCallback(() => {
     if (isTransitioningRef.current) return;
     isTransitioningRef.current = true;
@@ -254,7 +265,10 @@ function ServicesContent() {
     });
     setTimeout(() => {
       isTransitioningRef.current = false;
-    }, 380);
+      if (typeof document !== "undefined" && mousePosRef.current.x > 0) {
+        document.elementFromPoint(mousePosRef.current.x, mousePosRef.current.y);
+      }
+    }, TRANSITION_LOCK_MS);
   }, [total]);
 
   const goToPrev = useCallback(() => {
@@ -268,7 +282,10 @@ function ServicesContent() {
     });
     setTimeout(() => {
       isTransitioningRef.current = false;
-    }, 380);
+      if (typeof document !== "undefined" && mousePosRef.current.x > 0) {
+        document.elementFromPoint(mousePosRef.current.x, mousePosRef.current.y);
+      }
+    }, TRANSITION_LOCK_MS);
   }, [total]);
 
   const goToIndex = useCallback(
@@ -280,7 +297,10 @@ function ServicesContent() {
       setCurrentIndex(target);
       setTimeout(() => {
         isTransitioningRef.current = false;
-      }, 380);
+        if (typeof document !== "undefined" && mousePosRef.current.x > 0) {
+          document.elementFromPoint(mousePosRef.current.x, mousePosRef.current.y);
+        }
+      }, TRANSITION_LOCK_MS);
     },
     []
   );
@@ -319,78 +339,87 @@ function ServicesContent() {
     };
   }, [goToIndex]);
 
-  // Lenis smooth scroll provider for production-grade butter-smooth scrolling
-  useEffect(() => {
-    let lenis: Lenis | null = null;
-    let rafId: number = 0;
-
-    try {
-      lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smoothWheel: true,
-      });
-
-      const raf = (time: number) => {
-        lenis?.raf(time);
-        rafId = requestAnimationFrame(raf);
-      };
-      rafId = requestAnimationFrame(raf);
-    } catch {
-      // Fallback
-    }
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      lenis?.destroy();
-    };
-  }, []);
-
-  // Mouse wheel / trackpad handler with debounce & direction control
+  // Mouse wheel / trackpad handler with strict single-slide lockout & normalized delta resolution
   useEffect(() => {
     let lastWheelTime = 0;
-    const cooldown = 380;
+
+    const getNormalizedDelta = (e: WheelEvent) => {
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) {
+        // Line mode (common on Windows desktop mice: 3 lines per notch)
+        dy *= 40;
+      } else if (e.deltaMode === 2) {
+        // Page mode
+        dy *= 600;
+      }
+      return dy;
+    };
 
     const handleWheel = (e: WheelEvent) => {
       if (modalOpen) return;
-      e.preventDefault();
+
+      // Prevent native browser page bounce/scrolling
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+
+      if (e.clientX && e.clientY) {
+        mousePosRef.current = { x: e.clientX, y: e.clientY };
+      }
 
       const now = Date.now();
-      if (now - lastWheelTime < cooldown) return;
-      if (Math.abs(e.deltaY) < 14) return;
+
+      // Guard 1: Strict lockout during slide transition (prevents double-slide on a single scroll gesture)
+      if (isTransitioningRef.current || now - lastWheelTime < TRANSITION_LOCK_MS) {
+        return;
+      }
+
+      const deltaY = getNormalizedDelta(e);
+
+      // Guard 2: Filter out tiny sub-pixel vibrations and residual decaying momentum trickles
+      if (Math.abs(deltaY) < 18) {
+        return;
+      }
 
       lastWheelTime = now;
-      if (e.deltaY > 0) {
+
+      if (deltaY > 0) {
         goToNext();
       } else {
         goToPrev();
       }
     };
 
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => window.removeEventListener("wheel", handleWheel);
+    // Attach in capture phase on window and document so the event is intercepted reliably at the root
+    // even if the element directly beneath the stationary cursor unmounts during slide transition
+    window.addEventListener("wheel", handleWheel, { capture: true, passive: false });
+    document.addEventListener("wheel", handleWheel, { capture: true, passive: false });
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel, { capture: true });
+      document.removeEventListener("wheel", handleWheel, { capture: true });
+    };
   }, [goToNext, goToPrev, modalOpen]);
 
-  // Touch swipe handler with instant response & zero-lag touchmove trigger
+  // Touch swipe handler with strict single-swipe resolution across all mobile/tablet devices
   useEffect(() => {
     let startY = 0;
     let startX = 0;
-    let isSwiping = false;
+    let isTouching = false;
     let touchHandled = false;
     let lastTouchTime = 0;
-    const cooldown = 380;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (modalOpen) return;
       if (e.touches.length !== 1) return;
       startY = e.touches[0].clientY;
       startX = e.touches[0].clientX;
-      isSwiping = true;
+      isTouching = true;
       touchHandled = false;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isSwiping || touchHandled || modalOpen) return;
+      if (!isTouching || touchHandled || modalOpen) return;
       if (e.touches.length !== 1) return;
 
       const currentY = e.touches[0].clientY;
@@ -401,12 +430,15 @@ function ServicesContent() {
       const absY = Math.abs(deltaY);
       const absX = Math.abs(deltaX);
 
-      // Trigger swipe immediately once the threshold is crossed
-      if (absY > 38 || absX > 38) {
-        const now = Date.now();
-        if (now - lastTouchTime < cooldown) return;
-
+      // Definite swipe threshold (42px)
+      if (absY > 42 || absX > 42) {
+        // Mark handled for the entire duration of this finger touch so it cannot fire twice
         touchHandled = true;
+
+        const now = Date.now();
+        if (isTransitioningRef.current || now - lastTouchTime < TRANSITION_LOCK_MS) {
+          return;
+        }
         lastTouchTime = now;
 
         if (absY >= absX) {
@@ -426,13 +458,11 @@ function ServicesContent() {
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!isSwiping || modalOpen) return;
-      isSwiping = false;
+      if (!isTouching || modalOpen) return;
+      isTouching = false;
 
+      // If already triggered during touchmove, do not fire again
       if (touchHandled) return;
-
-      const now = Date.now();
-      if (now - lastTouchTime < cooldown) return;
 
       const endY = e.changedTouches[0].clientY;
       const endX = e.changedTouches[0].clientX;
@@ -442,9 +472,15 @@ function ServicesContent() {
       const absY = Math.abs(deltaY);
       const absX = Math.abs(deltaX);
 
-      // Quick flick detection
-      if (absY > 22 || absX > 22) {
+      // Quick flick detection (minimum 28px)
+      if (absY > 28 || absX > 28) {
+        touchHandled = true;
+        const now = Date.now();
+        if (isTransitioningRef.current || now - lastTouchTime < TRANSITION_LOCK_MS) {
+          return;
+        }
         lastTouchTime = now;
+
         if (absY >= absX) {
           if (deltaY < 0) {
             goToNext();
@@ -529,6 +565,7 @@ function ServicesContent() {
     center: {
       x: "0%",
       opacity: 1,
+      pointerEvents: "auto" as const,
       transition: {
         x: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
         opacity: { duration: 0.28, ease: "easeOut" },
@@ -537,6 +574,7 @@ function ServicesContent() {
     exit: (dir: number) => ({
       x: dir > 0 ? "-100%" : "100%",
       opacity: 0,
+      pointerEvents: "none" as const,
       transition: {
         x: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
         opacity: { duration: 0.25, ease: "easeIn" },
@@ -788,7 +826,7 @@ function ServicesContent() {
                         </label>
                         <input
                           type="tel"
-                          placeholder="+1 (555) 000-0000"
+                          placeholder="+91 97916 15499"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0071BC]/50 focus:border-[#0071BC]"

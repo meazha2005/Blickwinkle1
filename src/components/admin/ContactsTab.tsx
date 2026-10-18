@@ -13,8 +13,13 @@ import {
   Mail,
 } from "lucide-react";
 import { ContactMessage } from "@/types/admin";
+import { downloadCSV } from "@/lib/exportCsv";
 
-export default function ContactsTab() {
+interface ContactsTabProps {
+  onDataChange?: () => void;
+}
+
+export default function ContactsTab({ onDataChange }: ContactsTabProps = {}) {
   const [items, setItems] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -44,29 +49,8 @@ export default function ContactsTab() {
   }, [search, statusFilter]);
 
   useEffect(() => {
-    let ignore = false;
-    async function loadData() {
-      try {
-        const params = new URLSearchParams();
-        if (search) params.set("search", search);
-        if (statusFilter !== "all") params.set("status", statusFilter);
-
-        const res = await fetch(`/api/admin/contact-messages?${params.toString()}`);
-        const data = await res.json();
-        if (!ignore && data.success) {
-          setItems(data.items || []);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
-    void loadData();
-    return () => {
-      ignore = true;
-    };
-  }, [search, statusFilter]);
+    fetchItems();
+  }, [fetchItems]);
 
   const handleUpdateStatus = async (id: number, status: string, notes?: string) => {
     setUpdating(true);
@@ -81,6 +65,7 @@ export default function ContactsTab() {
         setFeedback("Message status updated.");
         setTimeout(() => setFeedback(null), 3000);
         fetchItems();
+        onDataChange?.();
         if (selectedItem && selectedItem.id === id) {
           setSelectedItem((prev) =>
             prev
@@ -112,6 +97,7 @@ export default function ContactsTab() {
         setTimeout(() => setFeedback(null), 3000);
         if (selectedItem?.id === id) setSelectedItem(null);
         fetchItems();
+        onDataChange?.();
       }
     } catch (err) {
       console.error(err);
@@ -123,25 +109,22 @@ export default function ContactsTab() {
     const headers = ["ID", "Name", "Email", "Phone", "Inquiry Type", "Preferred Contact", "Message", "Status", "Notes", "Created At"];
     const rows = items.map((i) => [
       i.id,
-      `"${(i.name || "").replace(/"/g, '""')}"`,
-      `"${(i.email || "").replace(/"/g, '""')}"`,
-      `"${(i.phone || "").replace(/"/g, '""')}"`,
-      `"${(i.inquiry_type || "").replace(/"/g, '""')}"`,
-      `"${(i.preferred_contact || "").replace(/"/g, '""')}"`,
-      `"${(i.message || "").replace(/"/g, '""')}"`,
+      i.name || "",
+      i.email || "",
+      i.phone || "",
+      i.inquiry_type || "",
+      i.preferred_contact || "",
+      i.message || "",
       i.status,
-      `"${(i.notes || "").replace(/"/g, '""')}"`,
+      i.notes || "",
       i.created_at,
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `blickwinkle_contact_messages_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(
+      `blickwinkle_contact_messages_${new Date().toISOString().slice(0, 10)}`,
+      headers,
+      rows
+    );
   };
 
   return (

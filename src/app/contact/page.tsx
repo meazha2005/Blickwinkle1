@@ -35,8 +35,8 @@ const CONTACT_METHODS = [
   {
     icon: Phone,
     title: "Call Direct",
-    value: "+91 98765 43210",
-    href: "tel:+919876543210",
+    value: "+91 97916 15499",
+    href: "tel:+919791615499",
     detail: "Mon - Sat: 9:00 AM - 7:00 PM IST",
     color: "#0071BC",
     action: "Call Now",
@@ -44,8 +44,8 @@ const CONTACT_METHODS = [
   {
     icon: MessageSquare,
     title: "WhatsApp Chat",
-    value: "+91 98765 43210",
-    href: "https://wa.me/919876543210?text=Hello%20Blickwinkle%20Team%2C%20I%20would%20like%20to%20inquire%20about%20your%20services%20and%20courses.",
+    value: "+91 97916 15499",
+    href: "https://wa.me/919791615499?text=Hello%20Blickwinkle%20Team%2C%20I%20would%20like%20to%20inquire%20about%20your%20services%20and%20courses.",
     detail: "Fast response within 15 minutes",
     color: "#39B54A",
     action: "Start Chat",
@@ -53,8 +53,8 @@ const CONTACT_METHODS = [
   {
     icon: Mail,
     title: "Official Email",
-    value: "hello@blickwinkle.com",
-    href: "mailto:hello@blickwinkle.com",
+    value: "training@blickwinkle.com",
+    href: "mailto:training@blickwinkle.com",
     detail: "Admissions & Enterprise Inquiries",
     color: "#0071BC",
     action: "Send Email",
@@ -320,7 +320,7 @@ export default function ContactPage() {
                         <input
                           required
                           type="tel"
-                          placeholder="+91 98765 43210"
+                          placeholder="+91 97916 15499"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0071BC]/50 focus:border-[#0071BC] bg-slate-50/50"
@@ -412,7 +412,7 @@ export default function ContactPage() {
                     </div>
                     <div className="flex justify-between py-1">
                       <span>Sunday:</span>
-                      <span className="font-bold text-amber-400">Pre-Booked Counseling Only</span>
+                      <span className="font-bold text-white">2:00 PM – 9:00 PM</span>
                     </div>
                   </div>
 

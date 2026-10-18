@@ -113,6 +113,11 @@
   50%       { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
 }
 
+@keyframes scrollDown {
+  0%   { transform: translateY(-50%); }
+  100% { transform: translateY(0%); }
+}
+
 /* ─── Utility Animation Classes ─────────────────────────────────────────── */
 .animate-fade-up      { animation: fadeUp      0.7s ease-out both; }
 .animate-fade-down    { animation: fadeDown    0.7s ease-out both; }
@@ -124,6 +129,12 @@
 .animate-float-rev    { animation: floatGentleReverse 6s ease-in-out infinite; }
 .animate-blob         { animation: blobMorph   8s ease-in-out infinite; }
 .animate-gradient     { animation: gradientShift 6s ease infinite; background-size: 200% 200%; }
+.animate-marquee-down { animation: scrollDown 22s linear infinite; }
+.animate-marquee-down:hover { animation-play-state: paused; }
+.mask-marquee-vertical {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+}
 
 /* Delay utilities */
 .delay-100  { animation-delay: 0.1s; }

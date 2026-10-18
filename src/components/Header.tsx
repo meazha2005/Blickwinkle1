@@ -9,8 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { label: "Home",     href: "/" },
-  { label: "Services", href: "/services" },
   { label: "About",    href: "/about" },
+  { label: "Services", href: "/services" },
   { label: "Courses",  href: "/courses" },
   { label: "Contact",  href: "/contact" },
 ];
@@ -69,7 +69,7 @@ export default function Header() {
                   BLICKWINKLE
                 </span>
                 <span className="text-[9px] tracking-widest text-slate-500 font-semibold uppercase">
-                  Digital Innovation
+                  Together We Grow
                 </span>
               </div>
             </Link>

@@ -37,7 +37,7 @@ export default function AdminPage() {
   // Stats state
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [recent, setRecent] = useState<AdminRecentActivities | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Check auth
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function AdminPage() {
     checkAuth();
   }, [router]);
 
-  // Fetch stats manually (for refresh button)
+  // Fetch stats manually or when tab switches
   const fetchStats = useCallback(async () => {
     setStatsLoading(true);
     try {
@@ -80,28 +80,12 @@ export default function AdminPage() {
     }
   }, []);
 
-  // Initial load when admin is authenticated
+  // Fetch stats when admin is authenticated or when navigating back to the dashboard tab
   useEffect(() => {
-    let isSubscribed = true;
-    async function loadInitialStats() {
-      try {
-        const res = await fetch("/api/admin/stats");
-        const data = await res.json();
-        if (isSubscribed && data.success) {
-          setStats(data.stats);
-          setRecent(data.recent);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
     if (admin) {
-      void loadInitialStats();
+      void fetchStats();
     }
-    return () => {
-      isSubscribed = false;
-    };
-  }, [admin]);
+  }, [admin, activeTab, fetchStats]);
 
   const handleLogout = async () => {
     try {
@@ -362,10 +346,10 @@ export default function AdminPage() {
             onNavigateTab={(tab) => setActiveTab(tab)}
           />
         )}
-        {activeTab === "services" && <ServicesTab />}
-        {activeTab === "courses" && <CoursesTab />}
-        {activeTab === "subscribers" && <SubscribersTab />}
-        {activeTab === "contacts" && <ContactsTab />}
+        {activeTab === "services" && <ServicesTab onDataChange={fetchStats} />}
+        {activeTab === "courses" && <CoursesTab onDataChange={fetchStats} />}
+        {activeTab === "subscribers" && <SubscribersTab onDataChange={fetchStats} />}
+        {activeTab === "contacts" && <ContactsTab onDataChange={fetchStats} />}
         {activeTab === "settings" && <SettingsTab admin={admin} />}
       </main>
     </div>

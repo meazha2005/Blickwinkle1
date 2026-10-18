@@ -3,10 +3,6 @@ import { getAuthenticatedAdmin } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { ServiceEnquiry, CourseEnrollment, ContactMessage, Subscriber } from "@/types/admin";
 
-interface CountRow {
-  count: number;
-}
-
 export async function GET() {
   const admin = await getAuthenticatedAdmin();
   if (!admin) {
@@ -14,70 +10,74 @@ export async function GET() {
   }
 
   try {
-    // 1. Service Enquiries
-    const [serviceTotal] = await query<CountRow[]>(
-      "SELECT COUNT(*) as count FROM blickwinkle_website_service_enquiries;"
-    );
-    const [servicePending] = await query<CountRow[]>(
-      "SELECT COUNT(*) as count FROM blickwinkle_website_service_enquiries WHERE status = 'pending';"
-    );
+    // Execute all count aggregations and recent activity queries concurrently in parallel
+    const [
+      serviceCounts,
+      courseCounts,
+      subCounts,
+      contactCounts,
+      recentServices,
+      recentCourses,
+      recentContacts,
+      recentSubscribers,
+    ] = await Promise.all([
+      // 1. Service Enquiries count
+      query<{ total: number | string; pending: number | string }[]>(
+        "SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as pending FROM blickwinkle_website_service_enquiries;"
+      ),
+      // 2. Course Enrollments count
+      query<{ total: number | string; pending: number | string }[]>(
+        "SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as pending FROM blickwinkle_website_course_enrollments;"
+      ),
+      // 3. Subscribers count
+      query<{ total: number | string; active: number | string }[]>(
+        "SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END), 0) as active FROM blickwinkle_website_subscribers;"
+      ),
+      // 4. Contact Messages count
+      query<{ total: number | string; new_count: number | string }[]>(
+        "SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END), 0) as new_count FROM blickwinkle_website_contact_messages;"
+      ),
+      // 5. Recent Service Enquiries (latest 5)
+      query<ServiceEnquiry[]>(
+        "SELECT id, name, email, service_name, status, created_at FROM blickwinkle_website_service_enquiries ORDER BY created_at DESC LIMIT 5;"
+      ),
+      // 6. Recent Course Enrollments (latest 5)
+      query<CourseEnrollment[]>(
+        "SELECT id, name, email, course_name, status, created_at FROM blickwinkle_website_course_enrollments ORDER BY created_at DESC LIMIT 5;"
+      ),
+      // 7. Recent Contact Messages (latest 5)
+      query<ContactMessage[]>(
+        "SELECT id, name, email, inquiry_type, status, created_at FROM blickwinkle_website_contact_messages ORDER BY created_at DESC LIMIT 5;"
+      ),
+      // 8. Recent Subscribers (latest 5)
+      query<Subscriber[]>(
+        "SELECT id, email, status, created_at FROM blickwinkle_website_subscribers ORDER BY created_at DESC LIMIT 5;"
+      ),
+    ]);
 
-    // 2. Course Enrollments
-    const [courseTotal] = await query<CountRow[]>(
-      "SELECT COUNT(*) as count FROM blickwinkle_website_course_enrollments;"
-    );
-    const [coursePending] = await query<CountRow[]>(
-      "SELECT COUNT(*) as count FROM blickwinkle_website_course_enrollments WHERE status = 'pending';"
-    );
-
-    // 3. Subscribers
-    const [subTotal] = await query<CountRow[]>(
-      "SELECT COUNT(*) as count FROM blickwinkle_website_subscribers;"
-    );
-    const [subActive] = await query<CountRow[]>(
-      "SELECT COUNT(*) as count FROM blickwinkle_website_subscribers WHERE status = 'active';"
-    );
-
-    // 4. Contact Messages
-    const [contactTotal] = await query<CountRow[]>(
-      "SELECT COUNT(*) as count FROM blickwinkle_website_contact_messages;"
-    );
-    const [contactNew] = await query<CountRow[]>(
-      "SELECT COUNT(*) as count FROM blickwinkle_website_contact_messages WHERE status = 'new';"
-    );
-
-    // Recent activities (latest 5 from each)
-    const recentServices = await query<ServiceEnquiry[]>(
-      "SELECT id, name, email, service_name, status, created_at FROM blickwinkle_website_service_enquiries ORDER BY created_at DESC LIMIT 5;"
-    );
-    const recentCourses = await query<CourseEnrollment[]>(
-      "SELECT id, name, email, course_name, status, created_at FROM blickwinkle_website_course_enrollments ORDER BY created_at DESC LIMIT 5;"
-    );
-    const recentContacts = await query<ContactMessage[]>(
-      "SELECT id, name, email, inquiry_type, status, created_at FROM blickwinkle_website_contact_messages ORDER BY created_at DESC LIMIT 5;"
-    );
-    const recentSubscribers = await query<Subscriber[]>(
-      "SELECT id, email, status, created_at FROM blickwinkle_website_subscribers ORDER BY created_at DESC LIMIT 5;"
-    );
+    const sRow = serviceCounts?.[0];
+    const cRow = courseCounts?.[0];
+    const subRow = subCounts?.[0];
+    const cntRow = contactCounts?.[0];
 
     return NextResponse.json({
       success: true,
       stats: {
         services: {
-          total: serviceTotal?.count || 0,
-          pending: servicePending?.count || 0,
+          total: Number(sRow?.total || 0),
+          pending: Number(sRow?.pending || 0),
         },
         courses: {
-          total: courseTotal?.count || 0,
-          pending: coursePending?.count || 0,
+          total: Number(cRow?.total || 0),
+          pending: Number(cRow?.pending || 0),
         },
         subscribers: {
-          total: subTotal?.count || 0,
-          active: subActive?.count || 0,
+          total: Number(subRow?.total || 0),
+          active: Number(subRow?.active || 0),
         },
         contacts: {
-          total: contactTotal?.count || 0,
-          new: contactNew?.count || 0,
+          total: Number(cntRow?.total || 0),
+          new: Number(cntRow?.new_count || 0),
         },
       },
       recent: {

@@ -150,15 +150,6 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Default credentials reminder */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600">
-              <span className="font-bold text-slate-800">Default Credentials:</span>
-              <div className="mt-1 flex flex-wrap gap-x-3 text-slate-600 text-[11px]">
-                <span>User: <strong className="text-[#0071BC] font-bold">admin@blickwinkle.com</strong></span>
-                <span>Pass: <strong className="text-[#0071BC] font-bold">Blickwinkle@2026</strong></span>
-              </div>
-            </div>
-
             <button
               type="submit"
               disabled={loading || success}

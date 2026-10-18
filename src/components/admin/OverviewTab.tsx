@@ -10,6 +10,7 @@ import {
   Sparkles,
   Download,
   Bot,
+  FileText,
 } from "lucide-react";
 import { AdminStats, AdminRecentActivities, ServiceEnquiry, CourseEnrollment } from "@/types/admin";
 import { downloadCSV } from "@/lib/exportCsv";
@@ -58,6 +59,15 @@ export default function OverviewTab({
       badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
     },
     {
+      title: "Published Articles",
+      count: stats?.articles?.total ?? 0,
+      sub: `${stats?.articles?.published ?? 0} published`,
+      icon: FileText,
+      color: "#6366F1",
+      tab: "articles",
+      badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    },
+    {
       title: "Email Subscribers",
       count: stats?.subscribers?.total ?? 0,
       sub: `${stats?.subscribers?.active ?? 0} active recipients`,
@@ -96,6 +106,12 @@ export default function OverviewTab({
         "SHIYA Chatbot Leads",
         stats?.chatbot?.total ?? 0,
         `${stats?.chatbot?.new ?? 0} new chatbot inquiries`,
+        new Date().toLocaleString(),
+      ],
+      [
+        "Published Articles",
+        stats?.articles?.total ?? 0,
+        `${stats?.articles?.published ?? 0} published articles`,
         new Date().toLocaleString(),
       ],
       [

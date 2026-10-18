@@ -142,6 +142,25 @@ export async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  // 7. Articles Table
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS blickwinkle_website_articles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      slug VARCHAR(255) NOT NULL,
+      image_url LONGTEXT NOT NULL,
+      content LONGTEXT NOT NULL,
+      summary TEXT NULL,
+      author VARCHAR(100) DEFAULT 'Blickwinkle Team',
+      status ENUM('published', 'draft') DEFAULT 'published',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_article_slug (slug),
+      INDEX idx_article_status (status),
+      INDEX idx_article_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+
   // Seed default admin if none exists
   const [rows] = await p.query<mysql.RowDataPacket[]>(
     "SELECT id FROM blickwinkle_website_admins LIMIT 1;"
@@ -156,4 +175,28 @@ export async function initDatabase() {
     );
     console.log(`[DB] Default admin seeded: ${defaultEmail} / ${defaultPass}`);
   }
+}
+
+let articlesTableChecked = false;
+export async function ensureArticlesTable() {
+  if (articlesTableChecked) return;
+  const p = getPool();
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS blickwinkle_website_articles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      slug VARCHAR(255) NOT NULL,
+      image_url LONGTEXT NOT NULL,
+      content LONGTEXT NOT NULL,
+      summary TEXT NULL,
+      author VARCHAR(100) DEFAULT 'Blickwinkle Team',
+      status ENUM('published', 'draft') DEFAULT 'published',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_article_slug (slug),
+      INDEX idx_article_status (status),
+      INDEX idx_article_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+  articlesTableChecked = true;
 }

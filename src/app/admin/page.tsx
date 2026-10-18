@@ -17,12 +17,14 @@ import {
   ExternalLink,
   RefreshCw,
   Bot,
+  FileText,
 } from "lucide-react";
 
 import OverviewTab from "@/components/admin/OverviewTab";
 import ServicesTab from "@/components/admin/ServicesTab";
 import CoursesTab from "@/components/admin/CoursesTab";
 import ChatbotTab from "@/components/admin/ChatbotTab";
+import ArticlesTab from "@/components/admin/ArticlesTab";
 import SubscribersTab from "@/components/admin/SubscribersTab";
 import ContactsTab from "@/components/admin/ContactsTab";
 import SettingsTab from "@/components/admin/SettingsTab";
@@ -125,6 +127,13 @@ export default function AdminPage() {
       icon: Bot,
       badge: stats?.chatbot?.new && stats.chatbot.new > 0 ? stats.chatbot.new : null,
       badgeColor: "bg-purple-100 text-purple-800 border border-purple-200",
+    },
+    {
+      id: "articles",
+      label: "Articles",
+      icon: FileText,
+      badge: stats?.articles?.total && stats.articles.total > 0 ? stats.articles.total : null,
+      badgeColor: "bg-indigo-100 text-indigo-800 border border-indigo-200",
     },
     {
       id: "subscribers",
@@ -358,6 +367,7 @@ export default function AdminPage() {
         {activeTab === "services" && <ServicesTab onDataChange={fetchStats} />}
         {activeTab === "courses" && <CoursesTab onDataChange={fetchStats} />}
         {activeTab === "chatbot" && <ChatbotTab onDataChange={fetchStats} />}
+        {activeTab === "articles" && <ArticlesTab onDataChange={fetchStats} />}
         {activeTab === "subscribers" && <SubscribersTab onDataChange={fetchStats} />}
         {activeTab === "contacts" && <ContactsTab onDataChange={fetchStats} />}
         {activeTab === "settings" && <SettingsTab admin={admin} />}

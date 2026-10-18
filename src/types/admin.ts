@@ -69,6 +69,19 @@ export interface ChatbotLead {
   updated_at?: string;
 }
 
+export interface Article {
+  id: number;
+  title: string;
+  slug: string;
+  image_url: string;
+  content: string;
+  summary?: string | null;
+  author?: string;
+  status: "published" | "draft";
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface AdminUser {
   id: number;
   email: string;
@@ -84,6 +97,7 @@ export interface AdminStats {
   subscribers: { total: number; active: number };
   contacts: { total: number; new: number };
   chatbot?: { total: number; new: number };
+  articles?: { total: number; published: number };
 }
 
 export interface AdminRecentActivities {
@@ -92,4 +106,5 @@ export interface AdminRecentActivities {
   contacts: ContactMessage[];
   subscribers: Subscriber[];
   chatbot?: ChatbotLead[];
+  articles?: Article[];
 }

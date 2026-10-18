@@ -324,8 +324,18 @@ export default function CoursesPage() {
       <main className="flex-1 pt-24 sm:pt-28 pb-16">
         {/* ── 1. Hero Section ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden pt-8 pb-14 lg:pb-20">
-          <div className="absolute top-0 right-10 w-[500px] h-[500px] rounded-full bg-[#0071BC]/5 blur-3xl pointer-events-none transform-gpu" />
-          <div className="absolute bottom-0 left-10 w-[500px] h-[500px] rounded-full bg-[#39B54A]/5 blur-3xl pointer-events-none transform-gpu" />
+          <div
+            className="absolute top-0 right-10 w-[500px] h-[500px] rounded-full pointer-events-none transform-gpu"
+            style={{
+              background: "radial-gradient(circle, rgba(0,113,188,0.05) 0%, rgba(0,113,188,0) 70%)",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-10 w-[500px] h-[500px] rounded-full pointer-events-none transform-gpu"
+            style={{
+              background: "radial-gradient(circle, rgba(57,181,74,0.05) 0%, rgba(57,181,74,0) 70%)",
+            }}
+          />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto">
@@ -459,8 +469,18 @@ export default function CoursesPage() {
 
         {/* ── 3. Institutional College Training Section ───────────────── */}
         <section className="py-16 sm:py-20 mt-10 bg-slate-900 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full bg-[#0071BC]/15 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] rounded-full bg-[#39B54A]/10 blur-3xl pointer-events-none" />
+          <div
+            className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, rgba(0,113,188,0.15) 0%, rgba(0,113,188,0) 70%)",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, rgba(57,181,74,0.10) 0%, rgba(57,181,74,0) 70%)",
+            }}
+          />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">

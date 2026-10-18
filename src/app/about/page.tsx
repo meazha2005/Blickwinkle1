@@ -48,7 +48,7 @@ const VALUES = [
   },
 ];
 
-const PARTNERS = [
+const CLIENT_LOGOS = [
   { name: "Apollo Hospitals", logo: "/logos/apollo.jpg", type: "Healthcare Enterprise" },
   { name: "Loyola College", logo: "/logos/loyola.png", type: "Academic Partner" },
   { name: "Hindustan Institute", logo: "/logos/hindustan.png", type: "University Partner" },
@@ -57,13 +57,14 @@ const PARTNERS = [
   { name: "Ramraj Textiles", logo: "/logos/ramraj.png", type: "Brand Client" },
   { name: "Premier Kabadi League", logo: "/logos/pkl.png", type: "Sports Client" },
   { name: "Yavi Interiors", logo: "/logos/yavi.png", type: "Corporate Client" },
+  { name: "Nirabi Interiors", logo: "/logos/nirabi.png", type: "Design & Living" },
 ];
 
 export default function AboutPage() {
-  // Preload all partner logos immediately so scrolling never freezes decoding images
+  // Preload all client logos immediately so scrolling never freezes decoding images
   useEffect(() => {
     if (typeof window === "undefined") return;
-    PARTNERS.forEach((p) => {
+    CLIENT_LOGOS.forEach((p) => {
       const img = new window.Image();
       img.src = p.logo;
     });
@@ -300,6 +301,72 @@ export default function AboutPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── 4. Our Clients (Infinite Loop Marquee) ───────────────────── */}
+        <section className="py-14 sm:py-20 bg-slate-50/80 border-y border-slate-100 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-10 text-center">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#0071BC]">
+              Trusted By Industry Leaders
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1">
+              Our Clients
+            </h2>
+            <p className="text-slate-600 text-xs sm:text-sm mt-2 max-w-xl mx-auto font-medium">
+              Proud to partner with top enterprises, academic institutions, and innovative brands.
+            </p>
+          </div>
+
+          {/* Infinite Marquee Track with Left & Right Gradient Fade Masks */}
+          <div className="relative w-full overflow-hidden mask-marquee-horizontal">
+            {/* Gradient Fade Overlays */}
+            <div className="absolute left-0 inset-y-0 w-16 sm:w-32 bg-gradient-to-r from-slate-50 via-slate-50/70 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 inset-y-0 w-16 sm:w-32 bg-gradient-to-l from-slate-50 via-slate-50/70 to-transparent z-10 pointer-events-none" />
+
+            <div className="flex w-max animate-marquee-left hover:[animation-play-state:paused] py-2">
+              {/* Set 1 */}
+              <div className="flex items-center gap-4 sm:gap-6 shrink-0 pr-4 sm:pr-6">
+                {[...CLIENT_LOGOS, ...CLIENT_LOGOS].map((client, idx) => (
+                  <div
+                    key={`client-a-${idx}`}
+                    className="h-20 sm:h-24 w-44 sm:w-52 rounded-2xl bg-white border border-slate-200/90 px-5 py-3 flex items-center justify-center shadow-xs hover:shadow-md hover:border-[#0071BC]/40 transition-all duration-300 group shrink-0"
+                    title={client.name}
+                  >
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <Image
+                        src={client.logo}
+                        alt={client.name}
+                        fill
+                        sizes="(max-width: 640px) 176px, 208px"
+                        className="object-contain object-center transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Set 2 (exact duplicate for seamless infinite loop) */}
+              <div className="flex items-center gap-4 sm:gap-6 shrink-0 pr-4 sm:pr-6" aria-hidden="true">
+                {[...CLIENT_LOGOS, ...CLIENT_LOGOS].map((client, idx) => (
+                  <div
+                    key={`client-b-${idx}`}
+                    className="h-20 sm:h-24 w-44 sm:w-52 rounded-2xl bg-white border border-slate-200/90 px-5 py-3 flex items-center justify-center shadow-xs hover:shadow-md hover:border-[#0071BC]/40 transition-all duration-300 group shrink-0"
+                    title={client.name}
+                  >
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <Image
+                        src={client.logo}
+                        alt={client.name}
+                        fill
+                        sizes="(max-width: 640px) 176px, 208px"
+                        className="object-contain object-center transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>

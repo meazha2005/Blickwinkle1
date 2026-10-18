@@ -143,6 +143,37 @@ export default function InteractiveFloatingLogos() {
       }
     }
 
+    let isVisible = true;
+    let isRunning = false;
+
+    function wakeUp() {
+      if (!isVisible || isRunning) return;
+      isRunning = true;
+      animId = requestAnimationFrame(loop);
+    }
+
+    function sleep() {
+      isRunning = false;
+      if (animId) {
+        cancelAnimationFrame(animId);
+        animId = 0;
+      }
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          wakeUp();
+        } else {
+          sleep();
+        }
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(container);
+
     function resize() {
       if (!canvas || !container) return;
       const rect = container.getBoundingClientRect();
@@ -178,6 +209,7 @@ export default function InteractiveFloatingLogos() {
           }
         });
       }
+      wakeUp();
     }
 
     resize();
@@ -189,11 +221,11 @@ export default function InteractiveFloatingLogos() {
     const updateRect = () => {
       cachedRect = heroElement.getBoundingClientRect();
     };
-    window.addEventListener("scroll", updateRect, { passive: true });
     window.addEventListener("resize", updateRect, { passive: true });
 
-    // Pointer tracking (mouse + touch) using cached bounds to avoid layout thrashing
+    // Pointer tracking (mouse + touch) using cached bounds without scroll thrashing
     const handlePointerMove = (e: PointerEvent) => {
+      wakeUp();
       const newX = e.clientX - cachedRect.left;
       const newY = e.clientY - cachedRect.top;
 
@@ -221,6 +253,8 @@ export default function InteractiveFloatingLogos() {
     };
 
     const handlePointerDown = (e: PointerEvent) => {
+      cachedRect = heroElement.getBoundingClientRect();
+      wakeUp();
       const clickX = e.clientX - cachedRect.left;
       const clickY = e.clientY - cachedRect.top;
 
@@ -246,7 +280,7 @@ export default function InteractiveFloatingLogos() {
     heroElement.addEventListener("pointerdown", handlePointerDown, { passive: true });
 
     // Snappy, realistic physics constants: lively drop, smooth settling
-    const GRAVITY = 0.52; // Snappy natural gravity (up from sluggish 0.25)
+    const GRAVITY = 0.52; // Snappy natural gravity
     const AIR_RESISTANCE = 0.985;
     const BOUNCE_RESTITUTION = 0.35;
     const INTERACTION_RADIUS = 90;
@@ -254,13 +288,17 @@ export default function InteractiveFloatingLogos() {
 
     // Animation Loop
     function loop() {
-      if (!ctx) return;
+      if (!ctx || !isVisible) {
+        sleep();
+        return;
+      }
       ctx.clearRect(0, 0, width, height);
 
       mouse.vx *= 0.82;
       mouse.vy *= 0.82;
 
       const halfSize = LOGO_SIZE / 2;
+      let hasActiveMotion = false;
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
@@ -293,6 +331,7 @@ export default function InteractiveFloatingLogos() {
 
         // Physics step
         if (!p.isResting) {
+          hasActiveMotion = true;
           p.vy += GRAVITY;
           p.vx *= AIR_RESISTANCE;
           p.vy *= AIR_RESISTANCE;
@@ -341,7 +380,12 @@ export default function InteractiveFloatingLogos() {
           p.y = p.floorY;
           p.vy = 0;
           p.vx = 0;
-          p.rotation *= 0.90;
+          if (Math.abs(p.rotation) > 0.005) {
+            p.rotation *= 0.90;
+            hasActiveMotion = true;
+          } else {
+            p.rotation = 0;
+          }
         }
 
         // Render logo without expensive shadowBlur for 60fps/120fps mobile butter smoothness
@@ -357,15 +401,21 @@ export default function InteractiveFloatingLogos() {
         }
       }
 
+      // If everything has rested and there is no active pointer, go to sleep to preserve 100% mobile CPU/GPU
+      if (!hasActiveMotion && !mouse.isActive) {
+        sleep();
+        return;
+      }
+
       animId = requestAnimationFrame(loop);
     }
 
-    animId = requestAnimationFrame(loop);
+    wakeUp();
 
     return () => {
-      cancelAnimationFrame(animId);
+      sleep();
+      observer.disconnect();
       window.removeEventListener("resize", resize);
-      window.removeEventListener("scroll", updateRect);
       window.removeEventListener("resize", updateRect);
       heroElement.removeEventListener("pointermove", handlePointerMove);
       heroElement.removeEventListener("pointerleave", handlePointerLeave);

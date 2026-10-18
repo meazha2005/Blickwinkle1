@@ -149,8 +149,18 @@ export default function ContactPage() {
       <main className="flex-1 pt-24 sm:pt-28 pb-16">
         {/* ── 1. Hero Section ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden pt-8 pb-12 lg:pb-16">
-          <div className="absolute top-0 right-10 w-[500px] h-[500px] rounded-full bg-[#0071BC]/5 blur-3xl pointer-events-none transform-gpu" />
-          <div className="absolute bottom-0 left-10 w-[500px] h-[500px] rounded-full bg-[#39B54A]/5 blur-3xl pointer-events-none transform-gpu" />
+          <div
+            className="absolute top-0 right-10 w-[500px] h-[500px] rounded-full pointer-events-none transform-gpu"
+            style={{
+              background: "radial-gradient(circle, rgba(0,113,188,0.05) 0%, rgba(0,113,188,0) 70%)",
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-10 w-[500px] h-[500px] rounded-full pointer-events-none transform-gpu"
+            style={{
+              background: "radial-gradient(circle, rgba(57,181,74,0.05) 0%, rgba(57,181,74,0) 70%)",
+            }}
+          />
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto">
@@ -389,7 +399,12 @@ export default function ContactPage() {
               <div className="lg:col-span-5 flex flex-col gap-6">
                 {/* Working Hours Card */}
                 <div className="p-7 rounded-3xl bg-slate-900 text-white relative overflow-hidden shadow-xl">
-                  <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-[#0071BC]/20 blur-2xl pointer-events-none" />
+                  <div
+                    className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none"
+                    style={{
+                      background: "radial-gradient(circle, rgba(0,113,188,0.20) 0%, rgba(0,113,188,0) 70%)",
+                    }}
+                  />
                   
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[#39B54A]">

@@ -16,6 +16,8 @@
 
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
   }
 
   body {
@@ -25,6 +27,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-x: none;
   }
 }
 
@@ -118,6 +122,11 @@
   100% { transform: translateY(0%); }
 }
 
+@keyframes scrollLeft {
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
 /* ─── Utility Animation Classes ─────────────────────────────────────────── */
 .animate-fade-up      { animation: fadeUp      0.7s ease-out both; }
 .animate-fade-down    { animation: fadeDown    0.7s ease-out both; }
@@ -129,11 +138,29 @@
 .animate-float-rev    { animation: floatGentleReverse 6s ease-in-out infinite; }
 .animate-blob         { animation: blobMorph   8s ease-in-out infinite; }
 .animate-gradient     { animation: gradientShift 6s ease infinite; background-size: 200% 200%; }
-.animate-marquee-down { animation: scrollDown 22s linear infinite; }
+.animate-marquee-down {
+  animation: scrollDown 22s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
 .animate-marquee-down:hover { animation-play-state: paused; }
 .mask-marquee-vertical {
   mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+.animate-marquee-left {
+  animation: scrollLeft 35s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.animate-marquee-left:hover {
+  animation-play-state: paused;
+}
+.mask-marquee-horizontal {
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
 }
 
 /* Delay utilities */

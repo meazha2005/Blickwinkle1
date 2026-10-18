@@ -115,7 +115,12 @@ function CtaSection() {
 
   return (
     <section id="subscribe" className="py-12 sm:py-14 bg-gradient-to-br from-[#0071BC] to-[#005f9e] overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-[500px] h-full bg-[#39B54A]/15 rounded-l-full blur-3xl pointer-events-none transform-gpu" />
+      <div
+        className="absolute top-0 right-0 w-[500px] h-full rounded-l-full pointer-events-none transform-gpu"
+        style={{
+          background: "radial-gradient(circle, rgba(57,181,74,0.15) 0%, rgba(57,181,74,0) 70%)",
+        }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center max-w-3xl mx-auto">
           
@@ -295,8 +300,18 @@ export default function HeroSection() {
           <div className="absolute inset-0 bg-gradient-to-br from-white via-white/90 to-blue-50/60" />
         </div>
 
-        <div className="absolute top-24 right-0 w-[500px] h-[500px] rounded-full bg-[#0071BC]/6 blur-3xl pointer-events-none transform-gpu" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-[#39B54A]/5 blur-3xl pointer-events-none transform-gpu" />
+        <div
+          className="absolute top-24 right-0 w-[500px] h-[500px] rounded-full pointer-events-none transform-gpu"
+          style={{
+            background: "radial-gradient(circle, rgba(0,113,188,0.06) 0%, rgba(0,113,188,0) 70%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full pointer-events-none transform-gpu"
+          style={{
+            background: "radial-gradient(circle, rgba(57,181,74,0.05) 0%, rgba(57,181,74,0) 70%)",
+          }}
+        />
 
         {/* Interactive Floating Logos (9x5 scattered logos falling from above with hover physics) */}
         <InteractiveFloatingLogos />

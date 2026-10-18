@@ -542,7 +542,7 @@ function ShiyaChatbotInner() {
 
           {/* Online green indicator dot */}
           <span className="absolute top-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center">
-            <span className="w-2 h-2 rounded-full bg-white animate-ping opacity-75" />
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
           </span>
 
           {/* Badge */}

@@ -54,8 +54,35 @@ export default function MobileTabletHeroAccent() {
     }
     window.addEventListener("resize", updateDims);
 
+    let isVisible = true;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          if (!animId) {
+            animId = requestAnimationFrame(loop);
+          }
+        } else {
+          if (animId) {
+            cancelAnimationFrame(animId);
+            animId = 0;
+          }
+        }
+      },
+      { threshold: 0.05 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
     const loop = (time: number) => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || !isVisible) {
+        animId = 0;
+        return;
+      }
       const w = cachedW;
       const h = cachedH;
 
@@ -115,7 +142,8 @@ export default function MobileTabletHeroAccent() {
     animId = requestAnimationFrame(loop);
 
     return () => {
-      cancelAnimationFrame(animId);
+      if (animId) cancelAnimationFrame(animId);
+      observer.disconnect();
       if (ro) ro.disconnect();
       window.removeEventListener("resize", updateDims);
     };

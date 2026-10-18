@@ -54,17 +54,17 @@ const socials = [
   {
     name: "Instagram",
     src: "/floatings/insta.png",
-    href: "https://instagram.com/blickwinkle",
+    href: "https://www.instagram.com/blickwinkle_learning_academy",
   },
   {
     name: "Facebook",
     src: "/floatings/facebook.png",
-    href: "https://facebook.com/blickwinkle",
+    href: "https://www.facebook.com/profile.php?id=61586677483962",
   },
   {
     name: "LinkedIn",
     src: "/floatings/linkedin.png",
-    href: "https://linkedin.com/company/blickwinkle",
+    href: "https://www.linkedin.com/company/blickwinkle-enterprises/",
   },
 ];
 

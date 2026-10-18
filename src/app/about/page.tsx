@@ -54,8 +54,8 @@ const CLIENT_LOGOS = [
   { name: "Hindustan Institute", logo: "/logos/hindustan.png", type: "University Partner" },
   { name: "Kings College", logo: "/logos/kings.png", type: "Engineering Partner" },
   { name: "New Prince Shri Bhavani", logo: "/logos/new_prince.png", type: "Academic Partner" },
-  { name: "Ramraj Textiles", logo: "/logos/ramraj.png", type: "Brand Client" },
-  { name: "Premier Kabadi League", logo: "/logos/pkl.png", type: "Sports Client" },
+  { name: "Ramraj Textiles", logo: "/logos/ramraj_full.png", type: "Brand Client" },
+  { name: "Premier Kabadi League", logo: "/logos/pkl_full.png", type: "Sports Client" },
   { name: "Yavi Interiors", logo: "/logos/yavi.png", type: "Corporate Client" },
   { name: "Nirabi Interiors", logo: "/logos/nirabi.png", type: "Design & Living" },
 ];

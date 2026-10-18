@@ -86,6 +86,26 @@ type FlowStep =
   | "ENTER_EMAIL"
   | "FINISHED";
 
+function renderFormattedMessage(text: string, isBot = true) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*[^*]+?\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
+      const content = part.slice(2, -2);
+      return (
+        <strong
+          key={index}
+          className={`font-black ${isBot ? "text-slate-900" : "text-white"}`}
+        >
+          {content}
+        </strong>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
 export default function ShiyaChatbot() {
   const pathname = usePathname();
 
@@ -115,32 +135,19 @@ function ShiyaChatbotInner() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Synchronous refs to prevent race conditions or stale closure state
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const flowStepRef = useRef<FlowStep>("CHOOSE_COURSE");
+  const selectedCourseRef = useRef<string>("");
+  const leadDataRef = useRef<{ name: string; phone: string; email: string }>({
+    name: "",
+    phone: "",
+    email: "",
+  });
+  const sessionIdRef = useRef<string>("");
+
   const formatTime = () =>
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-  // Initialize Session ID & initial welcome message
-  useEffect(() => {
-    const sid = "shiya_" + Math.random().toString(36).substring(2, 9) + "_" + Date.now();
-    setSessionId(sid);
-    startFreshConversation();
-  }, []);
-
-  // Auto-scroll on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
-
-  // Focus input automatically whenever text input becomes active
-  useEffect(() => {
-    if (
-      isOpen &&
-      (flowStep === "ENTER_NAME" ||
-        flowStep === "ENTER_PHONE" ||
-        flowStep === "ENTER_EMAIL")
-    ) {
-      setTimeout(() => inputRef.current?.focus(), 150);
-    }
-  }, [flowStep, isOpen]);
 
   // Save/sync conversation to database
   const syncToDatabase = async (
@@ -151,11 +158,14 @@ function ShiyaChatbotInner() {
     interestedVal: "yes" | "no" | "pending"
   ) => {
     try {
+      const activeSid = sessionIdRef.current;
+      if (!activeSid) return;
+
       await fetch("/api/chatbot/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId,
+          sessionId: activeSid,
           name: lead.name || null,
           phone: lead.phone || null,
           email: lead.email || null,
@@ -175,6 +185,10 @@ function ShiyaChatbotInner() {
   };
 
   const startFreshConversation = () => {
+    const newSid = "shiya_" + Math.random().toString(36).substring(2, 9) + "_" + Date.now();
+    setSessionId(newSid);
+    sessionIdRef.current = newSid;
+
     const courseOptions = COURSES.map((c) => ({
       label: c.title,
       value: c.title,
@@ -196,13 +210,44 @@ function ShiyaChatbotInner() {
       },
     ];
 
+    messagesRef.current = initialMessages;
     setMessages(initialMessages);
+
+    flowStepRef.current = "CHOOSE_COURSE";
     setFlowStep("CHOOSE_COURSE");
+
+    selectedCourseRef.current = "";
     setSelectedCourse("");
-    setLeadData({ name: "", phone: "", email: "" });
+
+    const resetLead = { name: "", phone: "", email: "" };
+    leadDataRef.current = resetLead;
+    setLeadData(resetLead);
+
     setInputValue("");
     setIsTyping(false);
   };
+
+  // Initialize Session ID & initial welcome message
+  useEffect(() => {
+    startFreshConversation();
+  }, []);
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
+  // Focus input automatically whenever text input becomes active
+  useEffect(() => {
+    if (
+      isOpen &&
+      (flowStep === "ENTER_NAME" ||
+        flowStep === "ENTER_PHONE" ||
+        flowStep === "ENTER_EMAIL")
+    ) {
+      setTimeout(() => inputRef.current?.focus(), 150);
+    }
+  }, [flowStep, isOpen]);
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -218,6 +263,7 @@ function ShiyaChatbotInner() {
     const course = COURSES.find((c) => c.title === courseTitle);
     if (!course) return;
 
+    selectedCourseRef.current = courseTitle;
     setSelectedCourse(courseTitle);
 
     // 1. Add user choice message
@@ -228,7 +274,8 @@ function ShiyaChatbotInner() {
       timestamp: formatTime(),
     };
 
-    const updatedWithUser = [...messages, userMsg];
+    const updatedWithUser = [...messagesRef.current, userMsg];
+    messagesRef.current = updatedWithUser;
     setMessages(updatedWithUser);
     setIsTyping(true);
 
@@ -239,7 +286,7 @@ function ShiyaChatbotInner() {
       const botDetailMsg: ChatMessage = {
         id: "bot_" + Date.now(),
         sender: "bot",
-        text: `Here are the details for **${course.title}**:\n\n${course.description}\n\n⏱ **Duration:** ${course.duration}\n💻 **Mode:** ${course.mode}`,
+        text: `Here are the details for **${course.title}**:\n\n${course.description}`,
         timestamp: formatTime(),
       };
 
@@ -254,11 +301,13 @@ function ShiyaChatbotInner() {
         ],
       };
 
-      const newHistory = [...updatedWithUser, botDetailMsg, botConfirmMsg];
+      const newHistory = [...messagesRef.current, botDetailMsg, botConfirmMsg];
+      messagesRef.current = newHistory;
       setMessages(newHistory);
+      flowStepRef.current = "CONFIRM_INTEREST";
       setFlowStep("CONFIRM_INTEREST");
 
-      syncToDatabase(newHistory, "CONFIRM_INTEREST", courseTitle, leadData, "pending");
+      syncToDatabase(newHistory, "CONFIRM_INTEREST", courseTitle, leadDataRef.current, "pending");
     }, 600);
   };
 
@@ -273,16 +322,18 @@ function ShiyaChatbotInner() {
         timestamp: formatTime(),
       };
 
-      setMessages((prev) => [...prev, userMsg]);
+      const updatedWithUser = [...messagesRef.current, userMsg];
+      messagesRef.current = updatedWithUser;
+      setMessages(updatedWithUser);
       setIsTyping(true);
+
+      syncToDatabase(updatedWithUser, "CHOOSE_COURSE", selectedCourseRef.current, leadDataRef.current, "no");
 
       setTimeout(() => {
         setIsTyping(false);
-        // Start from first
+        // Start from first with a fresh session
         startFreshConversation();
       }, 700);
-
-      syncToDatabase([...messages, userMsg], "CHOOSE_COURSE", selectedCourse, leadData, "no");
       return;
     }
 
@@ -294,7 +345,8 @@ function ShiyaChatbotInner() {
       timestamp: formatTime(),
     };
 
-    const updatedWithUser = [...messages, userMsg];
+    const updatedWithUser = [...messagesRef.current, userMsg];
+    messagesRef.current = updatedWithUser;
     setMessages(updatedWithUser);
     setIsTyping(true);
 
@@ -307,11 +359,13 @@ function ShiyaChatbotInner() {
         timestamp: formatTime(),
       };
 
-      const newHistory = [...updatedWithUser, botMsg];
+      const newHistory = [...messagesRef.current, botMsg];
+      messagesRef.current = newHistory;
       setMessages(newHistory);
+      flowStepRef.current = "ENTER_NAME";
       setFlowStep("ENTER_NAME");
 
-      syncToDatabase(newHistory, "ENTER_NAME", selectedCourse, leadData, "yes");
+      syncToDatabase(newHistory, "ENTER_NAME", selectedCourseRef.current, leadDataRef.current, "yes");
     }, 600);
   };
 
@@ -321,7 +375,9 @@ function ShiyaChatbotInner() {
     const val = inputValue.trim();
     if (!val) return;
 
-    if (flowStep === "ENTER_NAME") {
+    const currentStep = flowStepRef.current;
+
+    if (currentStep === "ENTER_NAME") {
       if (val.length < 2) return;
       const userMsg: ChatMessage = {
         id: "usr_" + Date.now(),
@@ -330,9 +386,12 @@ function ShiyaChatbotInner() {
         timestamp: formatTime(),
       };
 
-      const updatedLead = { ...leadData, name: val };
+      const updatedLead = { ...leadDataRef.current, name: val };
+      leadDataRef.current = updatedLead;
       setLeadData(updatedLead);
-      const updatedMessages = [...messages, userMsg];
+
+      const updatedMessages = [...messagesRef.current, userMsg];
+      messagesRef.current = updatedMessages;
       setMessages(updatedMessages);
       setInputValue("");
       setIsTyping(true);
@@ -346,12 +405,14 @@ function ShiyaChatbotInner() {
           timestamp: formatTime(),
         };
 
-        const newHistory = [...updatedMessages, botMsg];
+        const newHistory = [...messagesRef.current, botMsg];
+        messagesRef.current = newHistory;
         setMessages(newHistory);
+        flowStepRef.current = "ENTER_PHONE";
         setFlowStep("ENTER_PHONE");
-        syncToDatabase(newHistory, "ENTER_PHONE", selectedCourse, updatedLead, "yes");
+        syncToDatabase(newHistory, "ENTER_PHONE", selectedCourseRef.current, updatedLead, "yes");
       }, 600);
-    } else if (flowStep === "ENTER_PHONE") {
+    } else if (currentStep === "ENTER_PHONE") {
       if (val.length < 7) return;
       const userMsg: ChatMessage = {
         id: "usr_" + Date.now(),
@@ -360,9 +421,12 @@ function ShiyaChatbotInner() {
         timestamp: formatTime(),
       };
 
-      const updatedLead = { ...leadData, phone: val };
+      const updatedLead = { ...leadDataRef.current, phone: val };
+      leadDataRef.current = updatedLead;
       setLeadData(updatedLead);
-      const updatedMessages = [...messages, userMsg];
+
+      const updatedMessages = [...messagesRef.current, userMsg];
+      messagesRef.current = updatedMessages;
       setMessages(updatedMessages);
       setInputValue("");
       setIsTyping(true);
@@ -376,12 +440,14 @@ function ShiyaChatbotInner() {
           timestamp: formatTime(),
         };
 
-        const newHistory = [...updatedMessages, botMsg];
+        const newHistory = [...messagesRef.current, botMsg];
+        messagesRef.current = newHistory;
         setMessages(newHistory);
+        flowStepRef.current = "ENTER_EMAIL";
         setFlowStep("ENTER_EMAIL");
-        syncToDatabase(newHistory, "ENTER_EMAIL", selectedCourse, updatedLead, "yes");
+        syncToDatabase(newHistory, "ENTER_EMAIL", selectedCourseRef.current, updatedLead, "yes");
       }, 600);
-    } else if (flowStep === "ENTER_EMAIL") {
+    } else if (currentStep === "ENTER_EMAIL") {
       if (!val.includes("@") || !val.includes(".")) return;
       const userMsg: ChatMessage = {
         id: "usr_" + Date.now(),
@@ -390,9 +456,12 @@ function ShiyaChatbotInner() {
         timestamp: formatTime(),
       };
 
-      const updatedLead = { ...leadData, email: val };
+      const updatedLead = { ...leadDataRef.current, email: val };
+      leadDataRef.current = updatedLead;
       setLeadData(updatedLead);
-      const updatedMessages = [...messages, userMsg];
+
+      const updatedMessages = [...messagesRef.current, userMsg];
+      messagesRef.current = updatedMessages;
       setMessages(updatedMessages);
       setInputValue("");
       setIsTyping(true);
@@ -402,14 +471,16 @@ function ShiyaChatbotInner() {
         const botMsg: ChatMessage = {
           id: "bot_" + Date.now(),
           sender: "bot",
-          text: `Thank you, **${updatedLead.name}**! 🎉\n\nWe have recorded your inquiry for **${selectedCourse}**.\n\nOur course director will call or WhatsApp you within **2 business hours** with the complete syllabus, batch schedules, and exclusive discount options.\n\nFeel free to explore our website in the meantime!`,
+          text: `Thank you, **${updatedLead.name}**! 🎉\n\nWe have recorded your inquiry for **${selectedCourseRef.current}**.\n\nOur course director will call or WhatsApp you within **2 business hours** with the complete syllabus, batch schedules, and exclusive discount options.\n\nFeel free to explore our website in the meantime!`,
           timestamp: formatTime(),
         };
 
-        const newHistory = [...updatedMessages, botMsg];
+        const newHistory = [...messagesRef.current, botMsg];
+        messagesRef.current = newHistory;
         setMessages(newHistory);
+        flowStepRef.current = "FINISHED";
         setFlowStep("FINISHED");
-        syncToDatabase(newHistory, "FINISHED", selectedCourse, updatedLead, "yes");
+        syncToDatabase(newHistory, "FINISHED", selectedCourseRef.current, updatedLead, "yes");
       }, 700);
     }
   };
@@ -553,7 +624,7 @@ function ShiyaChatbotInner() {
                           : "bg-gradient-to-r from-[#0071BC] to-[#005f9e] text-white rounded-br-sm font-medium"
                       }`}
                     >
-                      {msg.text}
+                      {renderFormattedMessage(msg.text, isBot)}
                     </div>
 
                     {/* Options (Buttons) */}

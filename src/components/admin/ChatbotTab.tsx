@@ -32,6 +32,26 @@ interface ParsedMessage {
   timestamp?: string;
 }
 
+function renderFormattedMessage(text: string, isBot = true) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*[^*]+?\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
+      const content = part.slice(2, -2);
+      return (
+        <strong
+          key={index}
+          className={`font-black ${isBot ? "text-slate-900" : "text-white"}`}
+        >
+          {content}
+        </strong>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
 export default function ChatbotTab({ onDataChange }: ChatbotTabProps = {}) {
   const [items, setItems] = useState<ChatbotLead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -511,7 +531,7 @@ export default function ChatbotTab({ onDataChange }: ChatbotTabProps = {}) {
                   </h3>
                   <p className="text-xs text-slate-300">
                     Course: <strong>{selectedItem.course_name || "None"}</strong> &bull;{" "}
-                    {new Date(selectedItem.created_at).toLocaleString()}
+                    {new Date(selectedItem.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -597,7 +617,7 @@ export default function ChatbotTab({ onDataChange }: ChatbotTabProps = {}) {
                           : "bg-[#0071BC] text-white rounded-br-sm font-medium"
                       }`}
                     >
-                      {msg.text}
+                      {renderFormattedMessage(msg.text, isBot)}
                       {msg.timestamp && (
                         <span
                           className={`text-[9px] block mt-1 ${

@@ -39,8 +39,15 @@ export async function POST(req: Request) {
         phone = COALESCE(VALUES(phone), phone),
         email = COALESCE(VALUES(email), email),
         course_name = COALESCE(VALUES(course_name), course_name),
-        interested = VALUES(interested),
-        conversation = VALUES(conversation),
+        interested = CASE
+          WHEN interested = 'yes' THEN 'yes'
+          WHEN VALUES(interested) IS NOT NULL AND VALUES(interested) != 'pending' THEN VALUES(interested)
+          ELSE interested
+        END,
+        conversation = CASE
+          WHEN CHAR_LENGTH(VALUES(conversation)) >= CHAR_LENGTH(conversation) THEN VALUES(conversation)
+          ELSE conversation
+        END,
         updated_at = NOW();
     `;
 

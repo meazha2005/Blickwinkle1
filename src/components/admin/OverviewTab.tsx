@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Sparkles,
   Download,
+  Bot,
 } from "lucide-react";
 import { AdminStats, AdminRecentActivities, ServiceEnquiry, CourseEnrollment } from "@/types/admin";
 import { downloadCSV } from "@/lib/exportCsv";
@@ -48,6 +49,15 @@ export default function OverviewTab({
       badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
     },
     {
+      title: "SHIYA Chat Leads",
+      count: stats?.chatbot?.total ?? 0,
+      sub: `${stats?.chatbot?.new ?? 0} new leads`,
+      icon: Bot,
+      color: "#8B5CF6",
+      tab: "chatbot",
+      badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
+    },
+    {
       title: "Email Subscribers",
       count: stats?.subscribers?.total ?? 0,
       sub: `${stats?.subscribers?.active ?? 0} active recipients`,
@@ -80,6 +90,12 @@ export default function OverviewTab({
         "Course Applications",
         stats?.courses?.total ?? 0,
         `${stats?.courses?.pending ?? 0} pending review`,
+        new Date().toLocaleString(),
+      ],
+      [
+        "SHIYA Chatbot Leads",
+        stats?.chatbot?.total ?? 0,
+        `${stats?.chatbot?.new ?? 0} new chatbot inquiries`,
         new Date().toLocaleString(),
       ],
       [
@@ -147,8 +163,8 @@ export default function OverviewTab({
 
       {/* KPI Stats Cards (with graceful skeletons while initial loading) */}
       {loading && !stats ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {[1, 2, 3, 4].map((idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+          {[1, 2, 3, 4, 5].map((idx) => (
             <div
               key={idx}
               className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm animate-pulse space-y-4"
@@ -169,7 +185,7 @@ export default function OverviewTab({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
           {cards.map((card) => {
             const Icon = card.icon;
             return (

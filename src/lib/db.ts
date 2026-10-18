@@ -121,6 +121,27 @@ export async function initDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
 
+  // 6. Chatbot (SHIYA) Leads Table
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS blickwinkle_website_chatbot_leads (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      session_id VARCHAR(100) NOT NULL UNIQUE,
+      name VARCHAR(150) NULL,
+      phone VARCHAR(50) NULL,
+      email VARCHAR(191) NULL,
+      course_name VARCHAR(150) NULL,
+      interested ENUM('yes', 'no', 'pending') DEFAULT 'pending',
+      conversation LONGTEXT NOT NULL,
+      status ENUM('new', 'contacted', 'enrolled', 'closed') DEFAULT 'new',
+      notes TEXT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_chatbot_status (status),
+      INDEX idx_chatbot_course (course_name),
+      INDEX idx_chatbot_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+
   // Seed default admin if none exists
   const [rows] = await p.query<mysql.RowDataPacket[]>(
     "SELECT id FROM blickwinkle_website_admins LIMIT 1;"

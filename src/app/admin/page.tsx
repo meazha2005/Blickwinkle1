@@ -16,11 +16,13 @@ import {
   X,
   ExternalLink,
   RefreshCw,
+  Bot,
 } from "lucide-react";
 
 import OverviewTab from "@/components/admin/OverviewTab";
 import ServicesTab from "@/components/admin/ServicesTab";
 import CoursesTab from "@/components/admin/CoursesTab";
+import ChatbotTab from "@/components/admin/ChatbotTab";
 import SubscribersTab from "@/components/admin/SubscribersTab";
 import ContactsTab from "@/components/admin/ContactsTab";
 import SettingsTab from "@/components/admin/SettingsTab";
@@ -116,6 +118,13 @@ export default function AdminPage() {
       icon: GraduationCap,
       badge: stats?.courses?.pending && stats.courses.pending > 0 ? stats.courses.pending : null,
       badgeColor: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+    },
+    {
+      id: "chatbot",
+      label: "SHIYA Chats",
+      icon: Bot,
+      badge: stats?.chatbot?.new && stats.chatbot.new > 0 ? stats.chatbot.new : null,
+      badgeColor: "bg-purple-100 text-purple-800 border border-purple-200",
     },
     {
       id: "subscribers",
@@ -348,6 +357,7 @@ export default function AdminPage() {
         )}
         {activeTab === "services" && <ServicesTab onDataChange={fetchStats} />}
         {activeTab === "courses" && <CoursesTab onDataChange={fetchStats} />}
+        {activeTab === "chatbot" && <ChatbotTab onDataChange={fetchStats} />}
         {activeTab === "subscribers" && <SubscribersTab onDataChange={fetchStats} />}
         {activeTab === "contacts" && <ContactsTab onDataChange={fetchStats} />}
         {activeTab === "settings" && <SettingsTab admin={admin} />}

@@ -47,6 +47,28 @@ export interface ContactMessage {
   updated_at?: string;
 }
 
+export interface ChatbotMessage {
+  id: string;
+  sender: "bot" | "user";
+  text: string;
+  timestamp: string;
+}
+
+export interface ChatbotLead {
+  id: number;
+  session_id: string;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  course_name?: string | null;
+  interested: "yes" | "no" | "pending";
+  conversation: string;
+  status: "new" | "contacted" | "enrolled" | "closed";
+  notes?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface AdminUser {
   id: number;
   email: string;
@@ -61,6 +83,7 @@ export interface AdminStats {
   courses: { total: number; pending: number };
   subscribers: { total: number; active: number };
   contacts: { total: number; new: number };
+  chatbot?: { total: number; new: number };
 }
 
 export interface AdminRecentActivities {
@@ -68,4 +91,5 @@ export interface AdminRecentActivities {
   courses: CourseEnrollment[];
   contacts: ContactMessage[];
   subscribers: Subscriber[];
+  chatbot?: ChatbotLead[];
 }

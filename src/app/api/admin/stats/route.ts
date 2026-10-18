@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedAdmin } from "@/lib/auth";
 import { query } from "@/lib/db";
-import { ServiceEnquiry, CourseEnrollment, ContactMessage, Subscriber } from "@/types/admin";
+import { ServiceEnquiry, CourseEnrollment, ContactMessage, Subscriber, ChatbotLead } from "@/types/admin";
 
 export async function GET() {
   const admin = await getAuthenticatedAdmin();
@@ -16,10 +16,12 @@ export async function GET() {
       courseCounts,
       subCounts,
       contactCounts,
+      chatbotCounts,
       recentServices,
       recentCourses,
       recentContacts,
       recentSubscribers,
+      recentChatbot,
     ] = await Promise.all([
       // 1. Service Enquiries count
       query<{ total: number | string; pending: number | string }[]>(
@@ -37,21 +39,29 @@ export async function GET() {
       query<{ total: number | string; new_count: number | string }[]>(
         "SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END), 0) as new_count FROM blickwinkle_website_contact_messages;"
       ),
-      // 5. Recent Service Enquiries (latest 5)
+      // 5. Chatbot leads count
+      query<{ total: number | string; new_count: number | string }[]>(
+        "SELECT COUNT(*) as total, COALESCE(SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END), 0) as new_count FROM blickwinkle_website_chatbot_leads;"
+      ),
+      // 6. Recent Service Enquiries (latest 5)
       query<ServiceEnquiry[]>(
         "SELECT id, name, email, service_name, status, created_at FROM blickwinkle_website_service_enquiries ORDER BY created_at DESC LIMIT 5;"
       ),
-      // 6. Recent Course Enrollments (latest 5)
+      // 7. Recent Course Enrollments (latest 5)
       query<CourseEnrollment[]>(
         "SELECT id, name, email, course_name, status, created_at FROM blickwinkle_website_course_enrollments ORDER BY created_at DESC LIMIT 5;"
       ),
-      // 7. Recent Contact Messages (latest 5)
+      // 8. Recent Contact Messages (latest 5)
       query<ContactMessage[]>(
         "SELECT id, name, email, inquiry_type, status, created_at FROM blickwinkle_website_contact_messages ORDER BY created_at DESC LIMIT 5;"
       ),
-      // 8. Recent Subscribers (latest 5)
+      // 9. Recent Subscribers (latest 5)
       query<Subscriber[]>(
         "SELECT id, email, status, created_at FROM blickwinkle_website_subscribers ORDER BY created_at DESC LIMIT 5;"
+      ),
+      // 10. Recent Chatbot Leads (latest 5)
+      query<ChatbotLead[]>(
+        "SELECT id, session_id, name, phone, email, course_name, interested, conversation, status, created_at FROM blickwinkle_website_chatbot_leads ORDER BY created_at DESC LIMIT 5;"
       ),
     ]);
 
@@ -59,6 +69,7 @@ export async function GET() {
     const cRow = courseCounts?.[0];
     const subRow = subCounts?.[0];
     const cntRow = contactCounts?.[0];
+    const chatRow = chatbotCounts?.[0];
 
     return NextResponse.json({
       success: true,
@@ -79,12 +90,17 @@ export async function GET() {
           total: Number(cntRow?.total || 0),
           new: Number(cntRow?.new_count || 0),
         },
+        chatbot: {
+          total: Number(chatRow?.total || 0),
+          new: Number(chatRow?.new_count || 0),
+        },
       },
       recent: {
         services: recentServices || [],
         courses: recentCourses || [],
         contacts: recentContacts || [],
         subscribers: recentSubscribers || [],
+        chatbot: recentChatbot || [],
       },
     });
   } catch (error: unknown) {

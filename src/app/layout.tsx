@@ -42,11 +42,14 @@ export const metadata: Metadata = {
   },
 };
 
+import ShiyaChatbot from "@/components/ShiyaChatbot";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={jakarta.variable}>
       <body className="font-sans antialiased bg-white text-slate-900 selection:bg-[#0071BC]/20 selection:text-[#0071BC]">
         {children}
+        <ShiyaChatbot />
       </body>
     </html>
   );

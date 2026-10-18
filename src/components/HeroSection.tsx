@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import InteractiveFloatingLogos from "@/components/InteractiveFloatingLogos";
 import MobileTabletHeroAccent from "@/components/MobileTabletHeroAccent";
+import ReviewsSection from "@/components/ReviewsSection";
 import {
   ArrowRight,
   BarChart2,
@@ -518,7 +519,7 @@ export default function HeroSection() {
       {/* ================================================================
           SERVICES
           ================================================================ */}
-      <section id="services" className="py-20 lg:py-28 bg-white">
+      <section id="services" className="pt-14 sm:pt-16 pb-6 sm:pb-8 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Section header */}
@@ -560,6 +561,11 @@ export default function HeroSection() {
           </div>
         </div>
       </section>
+
+      {/* ================================================================
+          STUDENT & CLIENT REVIEWS (3-SECOND AUTO-PLAY 3D CAROUSEL)
+          ================================================================ */}
+      <ReviewsSection />
 
       {/* ================================================================
           CTA
